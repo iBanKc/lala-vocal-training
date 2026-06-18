@@ -75,7 +75,7 @@ body {
   transition: transform 0.2s, opacity 0.2s;
 }
 .brand-logo:hover { transform: scale(1.07); opacity: 0.85; }
-.brand-svg { width: 100%; height: 100%; }
+.brand-img { width: 100%; height: 100%; object-fit: contain; }
 
 /* Card style */
 section {
