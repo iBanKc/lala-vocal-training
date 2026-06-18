@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Let's Sing — วัดเสียงร้องตรงโน้ต</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -11,16 +11,15 @@
 </head>
 <body>
   <div id="app">
+
     <!-- Header -->
     <header class="header">
-      <!-- Blues Dot Music logo top-right -->
       <a href="#" class="brand-logo" aria-label="Blues Dot Music">
         <img src="logo.PNG" alt="Blues Dot Music" class="brand-img" />
       </a>
-
       <div class="header-center">
         <div class="logo">Let's Sing</div>
-        <p class="tagline">วัดเสียงร้องตรงโน้ต</p>
+        <p class="tagline" id="headerTagline">วัดเสียงร้องตรงโน้ต</p>
       </div>
     </header>
 
@@ -29,19 +28,17 @@
       <span id="permMsg"></span>
     </div>
 
-    <!-- Main Content -->
-    <main class="main">
+    <!-- ═══════════════════════════════════════════════
+         PAGE: PITCH TRAINER
+    ═══════════════════════════════════════════════ -->
+    <div id="pagePitch" class="page active">
 
-      <!-- Pitch Display -->
       <section class="pitch-section">
-        <div class="note-display">
-          <div class="current-note" id="currentNote">—</div>
-          <div class="note-octave" id="noteOctave"></div>
-        </div>
+        <div class="current-note" id="currentNote">—</div>
+        <div class="note-octave" id="noteOctave"></div>
         <div class="freq-display" id="freqDisplay">กด "เริ่ม" เพื่อเปิดไมค์</div>
       </section>
 
-      <!-- Accuracy Meter -->
       <section class="meter-section">
         <div class="meter-label">ความแม่นยำ</div>
         <div class="meter-bar-wrap">
@@ -56,12 +53,10 @@
         <div class="cent-display" id="centDisplay">0 cents</div>
       </section>
 
-      <!-- Pitch History Canvas -->
       <section class="canvas-section">
         <canvas id="pitchCanvas"></canvas>
       </section>
 
-      <!-- Target Note Selector -->
       <section class="target-section">
         <div class="target-label">โน้ตเป้าหมาย</div>
         <div class="note-buttons" id="noteButtons">
@@ -90,30 +85,137 @@
         </div>
       </section>
 
-      <!-- Controls -->
       <section class="controls-section">
         <button class="btn-start" id="startBtn">🎤 เริ่ม</button>
         <button class="btn-stop hidden" id="stopBtn">⏹ หยุด</button>
-        <button class="btn-play" id="playTargetBtn">🔊 เล่นโน้ตเป้าหมาย</button>
+        <button class="btn-play" id="playTargetBtn">🔊 เล่นโน้ต</button>
       </section>
 
-      <!-- Score -->
-      <section class="score-section" id="scoreSection">
-        <div class="score-box">
-          <div class="score-title">คะแนนเฉลี่ย</div>
-          <div class="score-value" id="scoreValue">—</div>
-          <div class="score-sub" id="scoreSub"></div>
+      <section class="score-section">
+        <div class="score-title">คะแนนเฉลี่ย</div>
+        <div class="score-value" id="scoreValue">—</div>
+        <div class="score-sub" id="scoreSub"></div>
+      </section>
+
+    </div><!-- /pagePitch -->
+
+    <!-- ═══════════════════════════════════════════════
+         PAGE: COMPARE
+    ═══════════════════════════════════════════════ -->
+    <div id="pageCompare" class="page">
+
+      <!-- Reference audio source selector -->
+      <section class="compare-source-section">
+        <div class="section-title">เสียงตัวอย่าง</div>
+        <div class="source-tabs">
+          <button class="source-tab active" id="tabYoutube">▶ YouTube</button>
+          <button class="source-tab" id="tabUpload">📂 อัปโหลดไฟล์</button>
+        </div>
+
+        <!-- YouTube panel -->
+        <div id="panelYoutube" class="source-panel">
+          <div class="yt-wrap">
+            <iframe
+              id="ytPlayer"
+              src="https://www.youtube.com/embed/YCLyAmXtpfY?enablejsapi=1&rel=0"
+              title="YouTube reference"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <p class="note-text">💡 เปิดวิดีโอแล้วร้องตาม จากนั้นกด <strong>เริ่มบันทึก</strong> เพื่อวิเคราะห์เสียงของคุณ</p>
+        </div>
+
+        <!-- Upload panel -->
+        <div id="panelUpload" class="source-panel hidden">
+          <label class="upload-label" id="uploadLabel">
+            <span id="uploadLabelText">📁 แตะเพื่อเลือกไฟล์เสียง (MP3, WAV, M4A)</span>
+            <input type="file" id="refFileInput" accept="audio/*" hidden />
+          </label>
+          <div id="refAnalyzing" class="status-msg hidden">⏳ กำลังวิเคราะห์เสียงตัวอย่าง...</div>
+          <div id="refReady" class="status-msg success hidden">✅ วิเคราะห์ไฟล์ตัวอย่างเสร็จแล้ว พร้อมเปรียบเทียบ</div>
         </div>
       </section>
 
-    </main>
+      <!-- Recording controls -->
+      <section class="controls-section">
+        <button class="btn-start" id="cmpStartBtn">🎤 เริ่มบันทึกเสียง</button>
+        <button class="btn-stop hidden" id="cmpStopBtn">⏹ หยุดบันทึก</button>
+      </section>
+
+      <!-- Live pitch while recording -->
+      <section class="pitch-section" id="cmpLivePitch" style="display:none">
+        <div class="current-note" id="cmpCurrentNote">—</div>
+        <div class="note-octave" id="cmpNoteOctave"></div>
+        <div class="freq-display" id="cmpFreqDisplay">กำลังฟัง...</div>
+        <div class="meter-bar-wrap" style="margin-top:12px">
+          <div class="meter-bar" id="cmpMeterBar"></div>
+          <div class="meter-center"></div>
+        </div>
+        <div class="meter-hints">
+          <span>ต่ำเกิน</span><span>ตรงโน้ต</span><span>สูงเกิน</span>
+        </div>
+      </section>
+
+      <!-- Result report -->
+      <section id="cmpReport" class="report-section hidden">
+        <div class="section-title">ผลการเปรียบเทียบ</div>
+
+        <!-- Score summary -->
+        <div class="report-summary">
+          <div class="report-score-box">
+            <div class="report-score-label">คะแนนรวม</div>
+            <div class="report-score-val" id="rptScore">—</div>
+          </div>
+          <div class="report-stats">
+            <div class="stat-item">
+              <span class="stat-label">ตรงโน้ต</span>
+              <span class="stat-val green" id="rptInTune">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">เบี่ยงเล็กน้อย</span>
+              <span class="stat-val yellow" id="rptSlightOff">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">ออกนอกโน้ต</span>
+              <span class="stat-val red" id="rptOff">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pitch comparison canvas -->
+        <div class="canvas-section" style="padding:0;margin-top:4px">
+          <canvas id="cmpCanvas" style="height:100px"></canvas>
+        </div>
+
+        <!-- Mismatch detail table -->
+        <div class="section-title" style="margin-top:16px">จุดที่เสียงไม่ตรง</div>
+        <div id="mismatchList" class="mismatch-list"></div>
+      </section>
+
+    </div><!-- /pageCompare -->
 
     <!-- Footer -->
     <footer class="footer">
-      <p>Let's Sing · Blues Dot Music · ฝึกร้องเพลงให้ตรงโน้ต</p>
+      <p>Let's Sing · Blues Dot Music</p>
     </footer>
-  </div>
+
+  </div><!-- /app -->
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-page="pagePitch">
+      <span class="nav-icon">🎵</span>
+      <span class="nav-label">ฝึกโน้ต</span>
+    </button>
+    <button class="nav-btn" data-page="pageCompare">
+      <span class="nav-icon">🎤</span>
+      <span class="nav-label">เปรียบเทียบ</span>
+    </button>
+  </nav>
 
   <script src="app.js"></script>
+  <script src="compare.js"></script>
 </body>
 </html>

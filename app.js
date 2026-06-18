@@ -70,6 +70,19 @@ let totalSamples = 0;
 let inTuneSamples = 0;
 const MAX_HISTORY = 200;
 
+// ── Bottom navigation ──────────────────────────────────
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.page;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    // Stop pitch listening when switching away
+    if (target !== 'pagePitch' && isListening) stopListening();
+  });
+});
+
 // ── DOM ────────────────────────────────────────────────
 const currentNoteEl = document.getElementById('currentNote');
 const noteOctaveEl  = document.getElementById('noteOctave');
