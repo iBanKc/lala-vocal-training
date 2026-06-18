@@ -17,7 +17,8 @@
       "Bash(npx vercel *)",
       "Bash(ls /tmp/*.png /tmp/*.jpg /tmp/*.jpeg 2>/dev/null | head -5; ls ~/Downloads/*.png 2>/dev/null | head -3)",
       "Bash(find /var/folders /tmp ~/Library -name \"*.png\" -newer \"/Users/bluedotrecords/Claude/Projects/Vocal Training/app.js\" 2>/dev/null | grep -v ShipIt | grep -v tccd | head -10)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(ls -lh \"/Users/bluedotrecords/Claude/Projects/Vocal Training/5 MINUTE VOCAL WARM UP - Jacobs Vocal Academy.mp3\" 2>/dev/null || ls -lh \"/Users/bluedotrecords/5 MINUTE VOCAL WARM UP - Jacobs Vocal Academy.mp3\" 2>/dev/null || find ~/Downloads -name \"*.mp3\" | head -5)"
     ]
   }
 }
