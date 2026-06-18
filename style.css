@@ -307,6 +307,60 @@ button {
 /* Canvas bg tweak for light theme */
 .canvas-section { background: var(--bg2); }
 
+/* Permission banner */
+.perm-banner {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius-sm);
+  color: #991b1b;
+  font-size: 0.9rem;
+  padding: 12px 16px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Mobile touch improvements */
+button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
+}
+.note-btn {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on double-tap */
+.note-buttons, .controls-section {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Larger touch targets on mobile */
+@media (max-width: 480px) {
+  .note-btn {
+    padding: 12px 4px;
+    font-size: 0.85rem;
+  }
+  button {
+    padding: 16px 20px;
+    font-size: 1rem;
+  }
+  .current-note {
+    font-size: 4rem;
+  }
+  .brand-logo {
+    width: 60px;
+    height: 60px;
+  }
+  .logo {
+    font-size: 1.7rem;
+  }
+}
+
 /* Animations */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
