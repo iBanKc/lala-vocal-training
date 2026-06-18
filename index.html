@@ -104,26 +104,47 @@
     ═══════════════════════════════════════════════ -->
     <div id="pageCompare" class="page">
 
-      <!-- Reference audio player -->
+      <!-- Reference source tabs -->
       <section class="compare-source-section">
         <div class="section-title">เสียงตัวอย่าง</div>
-        <div class="ref-track-card">
-          <div class="ref-track-info">
-            <div class="ref-track-icon">🎙️</div>
-            <div>
-              <div class="ref-track-name">5 Minute Vocal Warm Up</div>
-              <div class="ref-track-artist">Jacobs Vocal Academy</div>
-            </div>
-          </div>
-          <audio id="refAudio" src="reference.mp3" controls preload="none" class="ref-audio-player"></audio>
-          <div id="refLoadStatus" class="status-msg">⏳ กำลังโหลดและวิเคราะห์เสียงตัวอย่าง...</div>
+        <div class="source-tabs">
+          <button class="source-tab active" id="tabBuiltin">🎙️ ไฟล์ Built-in</button>
+          <button class="source-tab" id="tabUpload">📂 อัปโหลดไฟล์</button>
         </div>
-        <p class="note-text">💡 กดเล่นเสียงตัวอย่างแล้วร้องตาม จากนั้นกด <strong>เริ่มบันทึก</strong></p>
+
+        <!-- Built-in panel -->
+        <div id="panelBuiltin" class="source-panel">
+          <div class="ref-track-card">
+            <div class="ref-track-info">
+              <div class="ref-track-icon">🎙️</div>
+              <div>
+                <div class="ref-track-name">5 Minute Vocal Warm Up</div>
+                <div class="ref-track-artist">Jacobs Vocal Academy</div>
+              </div>
+            </div>
+            <audio id="refAudio" src="reference.mp3" controls preload="auto" class="ref-audio-player"></audio>
+            <div id="refLoadStatus" class="status-msg">⏳ วิเคราะห์ pitch ในพื้นหลัง...</div>
+          </div>
+        </div>
+
+        <!-- Upload panel -->
+        <div id="panelUpload" class="source-panel hidden">
+          <label class="upload-label" id="uploadLabel">
+            <span id="uploadLabelText">📁 แตะเพื่อเลือกไฟล์เสียง (MP3, WAV, M4A)</span>
+            <input type="file" id="refFileInput" accept="audio/*" hidden />
+          </label>
+          <div id="uploadAudioWrap" class="hidden" style="margin-top:12px">
+            <audio id="uploadedAudio" controls class="ref-audio-player"></audio>
+            <div id="uploadStatus" class="status-msg">⏳ กำลังวิเคราะห์ pitch...</div>
+          </div>
+        </div>
+
+        <p class="note-text" style="margin-top:10px">💡 กดเล่นแล้วร้องตาม จากนั้นกด <strong>เริ่มบันทึก</strong></p>
       </section>
 
       <!-- Recording controls -->
       <section class="controls-section">
-        <button class="btn-start" id="cmpStartBtn" disabled>⏳ กำลังโหลด...</button>
+        <button class="btn-start" id="cmpStartBtn">🎤 เริ่มบันทึกเสียง</button>
         <button class="btn-stop hidden" id="cmpStopBtn">⏹ หยุดบันทึก</button>
       </section>
 
