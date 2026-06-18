@@ -363,6 +363,7 @@ function drawCanvas(currentCents) {
 function showScore() {
   if (totalSamples === 0) return;
   const pct = Math.round((inTuneSamples / totalSamples) * 100);
+  document.getElementById('scoreSection').classList.remove('hidden');
   scoreValueEl.textContent = pct + '%';
   let label = '';
   if (pct >= 90)      label = '🌟 ยอดเยี่ยมมาก!';
