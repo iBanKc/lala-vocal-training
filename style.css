@@ -1,0 +1,291 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f0f1a;
+  --bg2: #1a1a2e;
+  --bg3: #16213e;
+  --accent: #7c3aed;
+  --accent2: #a855f7;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --text: #f1f5f9;
+  --text2: #94a3b8;
+  --border: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --radius-sm: 8px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Sarabun', 'Inter', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 16px 40px;
+}
+
+#app {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 36px 0 8px;
+}
+.logo {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent2), #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.tagline {
+  color: var(--text2);
+  font-size: 0.95rem;
+  margin-top: 4px;
+}
+
+/* Card style */
+section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+/* Pitch Section */
+.pitch-section {
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+}
+.current-note {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent2), #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.1s;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.note-octave {
+  font-size: 1.5rem;
+  color: var(--text2);
+  margin-top: 4px;
+  min-height: 28px;
+}
+.freq-display {
+  font-size: 0.9rem;
+  color: var(--text2);
+  margin-top: 12px;
+}
+
+/* Meter */
+.meter-section { }
+.meter-label {
+  font-size: 0.85rem;
+  color: var(--text2);
+  text-align: center;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.meter-bar-wrap {
+  position: relative;
+  height: 24px;
+  background: var(--bg3);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.meter-bar {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 6px;
+  border-radius: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--green);
+  transition: left 0.08s ease-out, background 0.2s;
+}
+.meter-center {
+  position: absolute;
+  top: 4px; bottom: 4px;
+  width: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.3);
+  border-radius: 1px;
+}
+.meter-hints {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text2);
+  margin-top: 8px;
+}
+.cent-display {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 10px;
+  color: var(--green);
+  transition: color 0.2s;
+}
+
+/* Canvas */
+.canvas-section {
+  padding: 16px;
+}
+#pitchCanvas {
+  width: 100%;
+  height: 120px;
+  display: block;
+  border-radius: var(--radius-sm);
+}
+
+/* Target Note Selector */
+.target-section { }
+.target-label {
+  font-size: 0.85rem;
+  color: var(--text2);
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.note-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.note-btn {
+  flex: 1 1 calc(100%/6 - 8px);
+  min-width: 44px;
+  padding: 10px 4px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.note-btn:hover {
+  border-color: var(--accent2);
+  color: var(--text);
+}
+.note-btn.active {
+  background: var(--accent);
+  border-color: var(--accent2);
+  color: #fff;
+}
+.octave-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text2);
+}
+.octave-select-wrap select {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Controls */
+.controls-section {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px 24px;
+  font-size: 1rem;
+  transition: all 0.15s;
+}
+.btn-start {
+  flex: 1;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+}
+.btn-start:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-stop {
+  flex: 1;
+  background: var(--red);
+  color: #fff;
+}
+.btn-stop:hover { opacity: 0.85; }
+.btn-play {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-play:hover { border-color: var(--accent2); color: var(--accent2); }
+.hidden { display: none !important; }
+
+/* Score */
+.score-section { text-align: center; }
+.score-title {
+  font-size: 0.85rem;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+.score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--green), #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.score-sub {
+  font-size: 0.9rem;
+  color: var(--text2);
+  margin-top: 6px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  color: var(--text2);
+  font-size: 0.8rem;
+  padding: 8px 0 0;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.listening .current-note {
+  animation: pulse 1.5s ease-in-out infinite;
+}

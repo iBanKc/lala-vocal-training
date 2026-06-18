@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ลาลา — วัดเสียงร้องตรงโน้ต</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">🎵 ลาลา</div>
+      <p class="tagline">วัดเสียงร้องตรงโน้ต</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- Pitch Display -->
+      <section class="pitch-section">
+        <div class="note-display">
+          <div class="current-note" id="currentNote">—</div>
+          <div class="note-octave" id="noteOctave"></div>
+        </div>
+        <div class="freq-display" id="freqDisplay">กด "เริ่ม" เพื่อเปิดไมค์</div>
+      </section>
+
+      <!-- Accuracy Meter -->
+      <section class="meter-section">
+        <div class="meter-label">ความแม่นยำ</div>
+        <div class="meter-bar-wrap">
+          <div class="meter-bar" id="meterBar"></div>
+          <div class="meter-center"></div>
+        </div>
+        <div class="meter-hints">
+          <span>ต่ำเกิน</span>
+          <span>ตรงโน้ต</span>
+          <span>สูงเกิน</span>
+        </div>
+        <div class="cent-display" id="centDisplay">0 cents</div>
+      </section>
+
+      <!-- Pitch History Canvas -->
+      <section class="canvas-section">
+        <canvas id="pitchCanvas"></canvas>
+      </section>
+
+      <!-- Target Note Selector -->
+      <section class="target-section">
+        <div class="target-label">โน้ตเป้าหมาย</div>
+        <div class="note-buttons" id="noteButtons">
+          <button class="note-btn active" data-note="C">C</button>
+          <button class="note-btn" data-note="C#">C#</button>
+          <button class="note-btn" data-note="D">D</button>
+          <button class="note-btn" data-note="D#">D#</button>
+          <button class="note-btn" data-note="E">E</button>
+          <button class="note-btn" data-note="F">F</button>
+          <button class="note-btn" data-note="F#">F#</button>
+          <button class="note-btn" data-note="G">G</button>
+          <button class="note-btn" data-note="G#">G#</button>
+          <button class="note-btn" data-note="A">A</button>
+          <button class="note-btn" data-note="A#">A#</button>
+          <button class="note-btn" data-note="B">B</button>
+        </div>
+        <div class="octave-select-wrap">
+          <label>ออคเทฟ:</label>
+          <select id="octaveSelect">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Controls -->
+      <section class="controls-section">
+        <button class="btn-start" id="startBtn">🎤 เริ่ม</button>
+        <button class="btn-stop hidden" id="stopBtn">⏹ หยุด</button>
+        <button class="btn-play" id="playTargetBtn">🔊 เล่นโน้ตเป้าหมาย</button>
+      </section>
+
+      <!-- Score -->
+      <section class="score-section" id="scoreSection">
+        <div class="score-box">
+          <div class="score-title">คะแนนเฉลี่ย</div>
+          <div class="score-value" id="scoreValue">—</div>
+          <div class="score-sub" id="scoreSub"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>ลาลา · ฝึกร้องเพลงให้ตรงโน้ต</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
