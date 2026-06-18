@@ -1,19 +1,21 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0f0f1a;
-  --bg2: #1a1a2e;
-  --bg3: #16213e;
-  --accent: #7c3aed;
-  --accent2: #a855f7;
-  --green: #22c55e;
-  --yellow: #eab308;
-  --red: #ef4444;
-  --text: #f1f5f9;
-  --text2: #94a3b8;
-  --border: rgba(255,255,255,0.08);
+  --bg: #f0f6ff;
+  --bg2: #ffffff;
+  --bg3: #e8f1ff;
+  --accent: #1976D2;
+  --accent2: #2196F3;
+  --accent-light: #64B5F6;
+  --green: #16a34a;
+  --yellow: #ca8a04;
+  --red: #dc2626;
+  --text: #0d1b2e;
+  --text2: #4a6585;
+  --border: rgba(33,150,243,0.18);
   --radius: 16px;
   --radius-sm: 8px;
+  --shadow: 0 2px 16px rgba(33,150,243,0.10);
 }
 
 body {
@@ -37,22 +39,43 @@ body {
 
 /* Header */
 .header {
-  text-align: center;
-  padding: 36px 0 8px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 0 8px;
 }
+
+.header-center {
+  text-align: center;
+}
+
 .logo {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent2), #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
+  letter-spacing: -0.5px;
 }
+
 .tagline {
   color: var(--text2);
   font-size: 0.95rem;
   margin-top: 4px;
 }
+
+/* Brand logo top-right */
+.brand-logo {
+  position: absolute;
+  right: 0;
+  top: 20px;
+  display: block;
+  width: 72px;
+  height: 72px;
+  text-decoration: none;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.brand-logo:hover { transform: scale(1.07); opacity: 0.85; }
+.brand-svg { width: 100%; height: 100%; }
 
 /* Card style */
 section {
@@ -60,41 +83,40 @@ section {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 24px;
+  box-shadow: var(--shadow);
 }
 
 /* Pitch Section */
 .pitch-section {
   text-align: center;
-  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  background: linear-gradient(135deg, #1565C0, #2196F3);
+  border-color: transparent;
 }
 .current-note {
   font-size: 5rem;
   font-weight: 700;
   line-height: 1;
-  background: linear-gradient(135deg, var(--accent2), #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
   transition: all 0.1s;
   min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 .note-octave {
   font-size: 1.5rem;
-  color: var(--text2);
+  color: rgba(255,255,255,0.75);
   margin-top: 4px;
   min-height: 28px;
 }
 .freq-display {
   font-size: 0.9rem;
-  color: var(--text2);
+  color: rgba(255,255,255,0.75);
   margin-top: 12px;
 }
 
 /* Meter */
-.meter-section { }
 .meter-label {
   font-size: 0.85rem;
   color: var(--text2);
@@ -102,6 +124,7 @@ section {
   margin-bottom: 14px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
 }
 .meter-bar-wrap {
   position: relative;
@@ -127,7 +150,7 @@ section {
   width: 2px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255,255,255,0.3);
+  background: rgba(33,150,243,0.35);
   border-radius: 1px;
 }
 .meter-hints {
@@ -158,13 +181,13 @@ section {
 }
 
 /* Target Note Selector */
-.target-section { }
 .target-label {
   font-size: 0.85rem;
   color: var(--text2);
   margin-bottom: 14px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
 }
 .note-buttons {
   display: flex;
@@ -188,11 +211,12 @@ section {
 }
 .note-btn:hover {
   border-color: var(--accent2);
-  color: var(--text);
+  color: var(--accent);
+  background: #dbeafe;
 }
 .note-btn.active {
-  background: var(--accent);
-  border-color: var(--accent2);
+  background: var(--accent2);
+  border-color: var(--accent);
   color: #fff;
 }
 .octave-select-wrap {
@@ -233,8 +257,9 @@ button {
   flex: 1;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: #fff;
+  box-shadow: 0 4px 14px rgba(33,150,243,0.35);
 }
-.btn-start:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-start:hover { opacity: 0.88; transform: translateY(-1px); }
 .btn-stop {
   flex: 1;
   background: var(--red);
@@ -245,9 +270,9 @@ button {
   flex: 1;
   background: var(--bg3);
   border: 1px solid var(--border);
-  color: var(--text);
+  color: var(--accent);
 }
-.btn-play:hover { border-color: var(--accent2); color: var(--accent2); }
+.btn-play:hover { background: #dbeafe; border-color: var(--accent2); }
 .hidden { display: none !important; }
 
 /* Score */
@@ -257,15 +282,13 @@ button {
   color: var(--text2);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 .score-value {
   font-size: 3rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--green), #60a5fa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent);
 }
 .score-sub {
   font-size: 0.9rem;
@@ -281,10 +304,13 @@ button {
   padding: 8px 0 0;
 }
 
+/* Canvas bg tweak for light theme */
+.canvas-section { background: var(--bg2); }
+
 /* Animations */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.6; }
 }
 .listening .current-note {
   animation: pulse 1.5s ease-in-out infinite;

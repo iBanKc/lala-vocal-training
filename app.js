@@ -240,7 +240,7 @@ function drawCanvas(currentCents) {
   ctx2d.clearRect(0, 0, w, h);
 
   // Background
-  ctx2d.fillStyle = '#0f0f1a';
+  ctx2d.fillStyle = '#f0f6ff';
   ctx2d.fillRect(0, 0, w, h);
 
   // Center line (target)
