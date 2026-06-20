@@ -221,5 +221,15 @@
 
   <script src="app.js"></script>
   <script src="compare.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script>
+    // Track virtual pageviews when switching tabs
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const page = btn.dataset.page === 'pagePitch' ? '/' : '/compare';
+        window.va && window.va('pageview', { path: page });
+      });
+    });
+  </script>
 </body>
 </html>
