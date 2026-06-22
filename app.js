@@ -336,6 +336,15 @@ function drawCanvas(currentCents) {
   ctx2d.fillStyle = '#f0f6ff';
   ctx2d.fillRect(0, 0, w, h);
 
+  // Accuracy zones: green (±10 cents), yellow (±25 cents)
+  const zoneGreenH = (10 / 50) * (h / 2 - 8);
+  const zoneYellowH = (25 / 50) * (h / 2 - 8);
+  ctx2d.fillStyle = 'rgba(22,163,74,0.08)';
+  ctx2d.fillRect(0, h / 2 - zoneGreenH, w, zoneGreenH * 2);
+  ctx2d.fillStyle = 'rgba(202,138,4,0.05)';
+  ctx2d.fillRect(0, h / 2 - zoneYellowH, w, zoneGreenH > 0 ? zoneYellowH - zoneGreenH : zoneYellowH);
+  ctx2d.fillRect(0, h / 2 + zoneGreenH, w, zoneYellowH - zoneGreenH);
+
   // Centre line
   ctx2d.strokeStyle = 'rgba(33,150,243,0.3)';
   ctx2d.lineWidth = 1;
@@ -370,8 +379,29 @@ function showScore() {
   else if (pct >= 75) label = '👍 ดีมาก ฝึกต่อไปนะ';
   else if (pct >= 50) label = '💪 พอใช้ได้ ลองอีกครั้ง';
   else                label = '🎵 ฝึกต่อไปเรื่อยๆ นะ';
+
+  const bestKey = 'letssing_best_score';
+  const prevBest = parseInt(localStorage.getItem(bestKey) || '0', 10);
+  if (pct > prevBest) {
+    localStorage.setItem(bestKey, pct);
+    label += ' (สถิติใหม่!)';
+  } else if (prevBest > 0) {
+    label += ` · สถิติ: ${prevBest}%`;
+  }
+
   scoreSubEl.textContent = label;
 }
+
+// ── Keyboard shortcuts ─────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !e.repeat && document.activeElement.tagName !== 'SELECT') {
+    e.preventDefault();
+    const pitchPage = document.getElementById('pagePitch');
+    if (!pitchPage.classList.contains('active')) return;
+    if (isListening) stopBtn.click();
+    else if (!startBtn.disabled) startBtn.click();
+  }
+});
 
 // ── Play target note ───────────────────────────────────
 playTargetBtn.addEventListener('click', () => {
