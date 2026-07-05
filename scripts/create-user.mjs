@@ -3,8 +3,12 @@
 // อ่าน DATABASE_URL จาก .env.local (สร้างด้วย `vercel env pull .env.local`)
 
 import { readFileSync } from 'node:fs';
+import net from 'node:net';
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
+
+// เครือข่ายไทย → us-east-1 มี RTT ~300ms ซึ่งเกิน Happy-Eyeballs timeout เริ่มต้น (250ms)
+net.setDefaultAutoSelectFamilyAttemptTimeout?.(3000);
 
 function loadEnvLocal() {
   try {

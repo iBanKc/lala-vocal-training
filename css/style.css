@@ -982,3 +982,6 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .manage-actions { display: flex; gap: 6px; }
 .prog-grid { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
 .prog-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); }
+
+/* หน้าที่เลื่อนได้ (hub/game) — section ห้ามถูกบีบตาม no-scroll layout เดิม */
+#pageHub > section, #pageHub > div, #pageGame > div, #pageGame section { flex-shrink: 0; }

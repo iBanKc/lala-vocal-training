@@ -1,6 +1,10 @@
 // รันไฟล์ SQL กับ Neon: node scripts/run-sql.mjs schema.sql
 import { readFileSync } from 'node:fs';
+import net from 'node:net';
 import { neon } from '@neondatabase/serverless';
+
+// เครือข่ายไทย → us-east-1 มี RTT ~300ms ซึ่งเกิน Happy-Eyeballs timeout เริ่มต้น (250ms)
+net.setDefaultAutoSelectFamilyAttemptTimeout?.(3000);
 
 function loadEnvLocal() {
   try {
@@ -19,11 +23,12 @@ const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 if (!url) { console.error('ไม่พบ DATABASE_URL — รัน `vercel env pull .env.local` ก่อน'); process.exit(1); }
 
 const sql = neon(url);
-const text = readFileSync(file, 'utf8');
-// แยกเป็น statement ต่อคำสั่ง (Neon HTTP driver รันได้ทีละคำสั่ง)
-const statements = text.split(/;\s*\n/).map(s => s.trim()).filter(s => s && !s.startsWith('--'));
+// ลบบรรทัด comment ก่อน แล้วแยกเป็น statement ต่อคำสั่ง (Neon HTTP driver รันได้ทีละคำสั่ง)
+const text = readFileSync(file, 'utf8')
+  .split('\n').filter(l => !l.trimStart().startsWith('--')).join('\n');
+const statements = text.split(/;\s*\n/).map(s => s.trim()).filter(Boolean);
 for (const st of statements) {
-  await sql.query(st);
+  await sql(st);
   console.log('✅', st.split('\n')[0].slice(0, 70));
 }
 console.log('เสร็จสิ้น');
