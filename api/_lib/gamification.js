@@ -1,6 +1,7 @@
 // กติกาเกมฝั่ง server — ค่าใน DB ต้องมาจากที่นี่เท่านั้น (client แค่แสดงผล)
+import { BOOK_EXERCISES, WARMUP_ROUTINES, bookExerciseCount } from '../../js/curriculum.js';
 
-export const GAME_IDS = ['note_match', 'note_hold', 'melody_echo', 'pitch_glide', 'song_compare'];
+export const GAME_IDS = ['note_match', 'note_hold', 'melody_echo', 'pitch_glide', 'song_compare', 'warmup_routine'];
 
 export const MAX_LEVEL = {
   note_match: 10,
@@ -8,7 +9,15 @@ export const MAX_LEVEL = {
   melody_echo: 12,
   pitch_glide: 10,
   song_compare: 1,
+  warmup_routine: WARMUP_ROUTINES.length,
 };
+
+// ด่านพิเศษจากหนังสือ: level = 101..100+จำนวนแบบฝึกของเกมนั้น (ปลดล็อกเสมอ)
+export function isBookLevel(gameId, level) {
+  return level > 100 && level <= 100 + bookExerciseCount(gameId);
+}
+
+export const BOOK_TOTAL = Object.values(BOOK_EXERCISES).reduce((a, l) => a + l.length, 0) + WARMUP_ROUTINES.length;
 
 // level ผู้เล่นคำนวณจาก XP: L2 @100, L3 @400, L4 @900, ...
 export function levelFromXp(xp) {
@@ -27,6 +36,8 @@ export function starsFromScore(score) {
 }
 
 export function xpForRound(score, level, gameId) {
+  if (gameId === 'warmup_routine') return Math.max(5, Math.round(score * 0.5)); // ไกด์จับเวลา — กัน grind
+  if (level > 100) return Math.max(5, Math.round(score * 1.3));                 // ด่านพิเศษจากหนังสือ
   const mult = gameId === 'song_compare' ? 2 : 1;
   return Math.max(5, Math.round(score * (1 + 0.15 * (level - 1)) * mult));
 }
@@ -60,6 +71,7 @@ export const BADGES = {
   song_master:   ctx => ctx.gameId === 'song_compare' && ctx.score >= 80,
   sessions_50:   ctx => ctx.totalSessions >= 50,
   hold_15:       ctx => ctx.gameId === 'note_hold' && (ctx.details?.held_sec ?? 0) >= 15,
+  book_worm:     ctx => ctx.bookPlayed >= BOOK_TOTAL,
 };
 
 export function newBadges(ctx, ownedIds) {

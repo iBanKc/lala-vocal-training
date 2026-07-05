@@ -39,9 +39,39 @@ function makeMelody(cfg, voiceLow, voiceHigh) {
   return melody;
 }
 
-export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
-  const cfg = config(level);
-  const melody = makeMelody(cfg, voiceLow, voiceHigh);
+// ด่านพิเศษจากหนังสือ: pattern ตายตัว (สเกล 5 โน้ตไล่ลง) ขยับขึ้นครึ่งเสียงต่อรอบ + พยางค์กำกับ
+const PATTERNS = { scale5_desc: [7, 5, 4, 2, 0] };
+
+function exerciseMelody(exercise, voiceLow, voiceHigh) {
+  const offsets = PATTERNS[exercise.pattern] || PATTERNS.scale5_desc;
+  const center = Math.round((voiceLow + voiceHigh) / 2);
+  const span = Math.max(...offsets);
+  // ให้ยอดสเกลของ key สุดท้ายไม่เกินขอบบนช่วงเสียง
+  const tonic0 = Math.max(voiceLow + 1, Math.min(center - 4, voiceHigh - 1 - span - (exercise.keys - 1)));
+  const notes = [];
+  for (let k = 0; k < exercise.keys; k++) {
+    const useAlt = exercise.syllablesAlt && k >= Math.ceil(exercise.keys / 2);
+    const syl = useAlt ? exercise.syllablesAlt : exercise.syllables;
+    offsets.forEach((off, i) => notes.push({ midi: tonic0 + k + off, syllable: syl ? syl[i % syl.length] : null }));
+  }
+  return notes;
+}
+
+export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise }) {
+  const cfg = exercise
+    ? {
+        notes: 0, // ไม่ใช้ (melody มาจาก pattern)
+        windowMs: 5000,
+        staccato: !!exercise.staccato,
+        judgeDurMs: exercise.staccato ? 250 : 400, // โน้ตตัดเสียงร้องสั้น
+        noteDur: exercise.staccato ? 0.32 : 60 / (exercise.tempo || 90) * 0.9,
+      }
+    : { ...config(level), staccato: false, judgeDurMs: 400, noteDur: 0.55 };
+
+  const melodyNotes = exercise
+    ? exerciseMelody(exercise, voiceLow, voiceHigh)
+    : makeMelody(cfg, voiceLow, voiceHigh).map(m => ({ midi: m, syllable: null }));
+  const melody = melodyNotes.map(n => n.midi);
 
   stage.innerHTML = `
     <div class="nm-top">
@@ -90,7 +120,8 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
     instrEl.textContent = '👂 ฟังทำนองให้ดี...';
     for (let i = 0; i < melody.length; i++) {
       dots[i].classList.add('playing');
-      await playMelody([melody[i]], { noteDur: 0.55, gap: 0.1 });
+      if (melodyNotes[i].syllable) noteEl.textContent = melodyNotes[i].syllable;
+      await playMelody([melody[i]], { noteDur: cfg.noteDur, gap: cfg.staccato ? 0.15 : 0.1 });
       dots[i].classList.remove('playing');
     }
     await wait(250);
@@ -119,21 +150,22 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
       }
 
       dots.forEach((d, i) => d.classList.toggle('active', i === n));
-      instrEl.textContent = `🎤 ร้องโน้ตที่ ${n + 1}/${melody.length}`;
-      noteEl.textContent = '♪';
+      const syl = melodyNotes[n].syllable;
+      instrEl.textContent = syl ? `🎤 ร้อง "${syl}" (โน้ต ${n + 1}/${melody.length})` : `🎤 ร้องโน้ตที่ ${n + 1}/${melody.length}`;
+      noteEl.textContent = syl || '♪';
       roll.setTarget(target, 50);
 
-      seg = new SegmentTracker({ minDurMs: 300 });
+      seg = new SegmentTracker({ minDurMs: Math.min(250, cfg.judgeDurMs) });
       listening = true;
 
-      // ตัดสินเมื่อได้ segment นิ่ง ≥400ms (stddev < 60¢) หรือหมดเวลา
+      // ตัดสินเมื่อได้ segment นิ่งพอ (โน้ต staccato สั้นกว่าปกติ) หรือหมดเวลา
       const t0 = performance.now();
       let judged = null;
       while (performance.now() - t0 < cfg.windowMs) {
         if (signal.aborted) return null;
         await wait(60);
         const live = seg.liveStats(target);
-        if (live && live.durMs >= 400 && live.stddevCents < 60) { judged = live; break; }
+        if (live && live.durMs >= cfg.judgeDurMs && live.stddevCents < 60) { judged = live; break; }
       }
       listening = false;
       if (!judged) {
@@ -185,6 +217,9 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
     score,
     accuracy_pct: (results.filter(r => r.score > 0).length / results.length) * 100,
     avg_cents_off: sung.length ? sung.reduce((a, r) => a + Math.abs(r.cents), 0) / sung.length : null,
-    details: { melody, sung: results.map(r => ({ midi: r.sung_midi, cents: r.cents })), replays },
+    details: {
+      melody, sung: results.map(r => ({ midi: r.sung_midi, cents: r.cents })), replays,
+      ...(exercise ? { exercise: exercise.id } : {}),
+    },
   };
 }

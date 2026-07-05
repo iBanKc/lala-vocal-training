@@ -49,9 +49,48 @@ function buildCourse(level, voiceLow, voiceHigh) {
   return segs;
 }
 
-export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
-  const tol = tolerance(level);
-  const course = buildCourse(level, voiceLow, voiceHigh);
+// เส้นทางบินจากแบบฝึกหัดในหนังสือ (Ng / Ning): สเกลไล่ลง 5-4-3-2-1 legato
+// ขยับขึ้นครึ่งเสียงต่อ key; Ng ต่อท้ายด้วยไล่ลงหนึ่งอ็อกเทฟ
+function buildExerciseCourse(exercise, voiceLow, voiceHigh) {
+  const beat = 60 / (exercise.tempo || 60);
+  const center = Math.round((voiceLow + voiceHigh) / 2);
+  const desc = [7, 5, 4, 2, 0];
+  const segs = [];
+  let t = 0;
+  const add = (dur, fn, glide = false) => { segs.push({ t0: t, t1: t + dur, fn, glide }); t += dur; };
+  const clamp = m => Math.max(voiceLow + 1, Math.min(voiceHigh - 1, m));
+
+  for (let k = 0; k < exercise.keys; k++) {
+    const tonic = clamp(center - 4 + k);
+    // สเกลไล่ลง legato: เชื่อมโน้ตด้วย glide สั้น ๆ ให้ลูกโป่งไหลตามธรรมชาติ
+    for (let i = 0; i < desc.length; i++) {
+      const midi = clamp(tonic + desc[i]);
+      add(beat * 0.75, () => midi);
+      if (i < desc.length - 1) {
+        const next = clamp(tonic + desc[i + 1]);
+        add(beat * 0.25, u => midi + (next - midi) * u, true);
+      }
+    }
+    if (exercise.course === 'ng') {
+      // ขยายเป็นหนึ่งอ็อกเทฟไล่ลง (glide ยาว)
+      add(beat, () => clamp(tonic + 12));
+      add(beat * 3, u => clamp(tonic + 12) + (clamp(tonic) - clamp(tonic + 12)) * u, true);
+      add(beat, () => clamp(tonic));
+    }
+    // พักหายใจ + เตรียม key ถัดไป: ไต่ขึ้นหายอดสเกลใหม่
+    if (k < exercise.keys - 1) {
+      const nextTop = clamp(center - 4 + k + 1 + 7);
+      add(1.2, u => clamp(tonic) + (nextTop - clamp(tonic)) * u, true);
+    }
+  }
+  return segs;
+}
+
+export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise }) {
+  const tol = exercise ? 60 : tolerance(level); // แบบฝึกหนังสือใช้ห่วงขนาดกลางคงที่
+  const course = exercise
+    ? buildExerciseCourse(exercise, voiceLow, voiceHigh)
+    : buildCourse(level, voiceLow, voiceHigh);
   const courseDur = course[course.length - 1].t1;
 
   // ห่วง: สุ่มตัวอย่างตามเส้นทางทุก 0.8 วิ
@@ -236,6 +275,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
       rings_hit: hits,
       smoothness: Math.round(smoothness * 100) / 100,
       tolerance: tol,
+      ...(exercise ? { exercise: exercise.id } : {}),
     },
   };
 }

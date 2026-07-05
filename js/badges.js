@@ -13,6 +13,7 @@ export const BADGE_INFO = {
   song_master:   { emoji: '🎤', name: 'นักร้องตัวจริง',   desc: 'ร้องเพลงเต็มได้ 80+' },
   sessions_50:   { emoji: '🎓', name: 'ขยันฝึก',         desc: 'ฝึกครบ 50 รอบ' },
   hold_15:       { emoji: '🫁', name: 'ปอดเหล็ก',        desc: 'ลากเสียงนิ่งได้ 15 วินาที' },
+  book_worm:     { emoji: '📖', name: 'ศิษย์เสียงใหม่',   desc: 'ฝึกครบทุกแบบฝึกจากหนังสือ เสียงใหม่ฯ' },
 };
 
 export const LEVEL_TITLES = [

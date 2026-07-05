@@ -989,3 +989,69 @@ body:not(.auth-locked) .login-view { display: none !important; }
 /* guest toggle บนหน้าครู */
 .guest-toggle { font-size: 0.85rem; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .login-hint a { color: var(--accent); }
+
+/* ══════════ ด่านพิเศษจากหนังสือ ══════════ */
+.book-section-title { margin-top: 14px; }
+.book-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.book-btn {
+  font-family: inherit;
+  text-align: left;
+  background: linear-gradient(135deg, #fffbeb, var(--bg2));
+  border: 1.5px solid rgba(202,138,4,0.35);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+.book-btn:hover { border-color: #ca8a04; }
+.book-btn-name { font-weight: 700; color: #92400e; }
+.book-btn-desc { font-size: 0.75rem; color: var(--text2); }
+.book-tip { background: #fffbeb; border: 1px dashed rgba(202,138,4,0.4); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.8rem; }
+.routine-grid { grid-template-columns: 1fr; }
+.routine-btn { flex-direction: row; gap: 10px; justify-content: flex-start; padding: 12px 14px; }
+.routine-name { font-weight: 700; flex: 1; text-align: left; }
+
+/* Hee-ah combo counter */
+.rc-combo-wrap { text-align: center; margin: 12px 0; }
+.rc-combo {
+  font-size: 4.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.rc-combo.pop { animation: comboPop 0.3s ease; }
+@keyframes comboPop { from { transform: scale(1.5); color: #16a34a; } to { transform: scale(1); } }
+.rc-combo-label { color: var(--text2); font-size: 0.85rem; }
+
+/* Crescendo guide */
+.cr-guide { position: relative; width: 100%; max-width: 320px; }
+.cr-guide-svg { width: 100%; height: auto; }
+.cr-cursor {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0;
+  width: 2px;
+  background: var(--red);
+  transition: left 0.1s linear;
+}
+
+/* Warmup routine */
+.wr-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+}
+.wr-progress { font-size: 0.78rem; color: var(--text2); }
+.wr-name { font-size: 1.3rem; color: var(--accent); }
+.wr-instruction { font-size: 0.92rem; text-align: left; line-height: 1.55; }
+.wr-feel { font-size: 0.8rem; color: var(--text2); text-align: left; background: var(--bg3); border-radius: var(--radius-sm); padding: 8px 10px; }
+.wr-timer { font-size: 2.6rem; font-weight: 700; color: var(--accent); }
+.wr-actions { display: flex; flex-direction: column; gap: 8px; }

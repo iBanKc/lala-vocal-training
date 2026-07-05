@@ -2,7 +2,7 @@ import { sql } from './_lib/db.js';
 import { requireAuth } from './_lib/auth.js';
 import {
   GAME_IDS, MAX_LEVEL, levelFromXp, starsFromScore, xpForRound,
-  bangkokDate, nextStreak, newBadges,
+  bangkokDate, nextStreak, newBadges, isBookLevel,
 } from './_lib/gamification.js';
 
 export default async function handler(req, res) {
@@ -27,7 +27,8 @@ export default async function handler(req, res) {
   const score = Math.round(Number(b.score));
 
   if (!GAME_IDS.includes(gameId)) return res.status(400).json({ error: 'game_id ไม่ถูกต้อง' });
-  if (!Number.isInteger(level) || level < 1 || level > MAX_LEVEL[gameId])
+  const bookLevel = isBookLevel(gameId, level);
+  if (!Number.isInteger(level) || (!bookLevel && (level < 1 || level > MAX_LEVEL[gameId])))
     return res.status(400).json({ error: 'level ไม่ถูกต้อง' });
   if (!Number.isFinite(score) || score < 0 || score > 100)
     return res.status(400).json({ error: 'score ไม่ถูกต้อง' });
@@ -44,12 +45,15 @@ export default async function handler(req, res) {
   `;
   if (!user) return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้' });
 
+  // ด่านพิเศษจากหนังสือ + วอร์มไกด์ ปลดล็อกเสมอ; ด่านปกติต้องผ่านลำดับ
   const [unlock] = await sql`
     SELECT COALESCE(MAX(level), 0) AS max_cleared
-    FROM game_progress WHERE user_id = ${auth.userId} AND game_id = ${gameId} AND best_stars >= 2
+    FROM game_progress WHERE user_id = ${auth.userId} AND game_id = ${gameId} AND best_stars >= 2 AND level <= 100
   `;
-  const maxPlayable = Math.min(Number(unlock.max_cleared) + 1, MAX_LEVEL[gameId]);
-  if (level > maxPlayable) return res.status(400).json({ error: 'ด่านนี้ยังไม่ปลดล็อก' });
+  if (!bookLevel && gameId !== 'warmup_routine') {
+    const maxPlayable = Math.min(Number(unlock.max_cleared) + 1, MAX_LEVEL[gameId]);
+    if (level > maxPlayable) return res.status(400).json({ error: 'ด่านนี้ยังไม่ปลดล็อก' });
+  }
 
   const stars = starsFromScore(score);
   const xpEarned = xpForRound(score, level, gameId);
@@ -78,10 +82,14 @@ export default async function handler(req, res) {
   ]);
 
   // ── ตรวจ badge หลังบันทึก ───────────────────────────────
-  const [[agg], owned] = await Promise.all([
+  const [[agg], [book], owned] = await Promise.all([
     sql`
       SELECT COUNT(*)::int AS total_sessions, COUNT(DISTINCT game_id)::int AS distinct_games
       FROM game_sessions WHERE user_id = ${auth.userId}
+    `,
+    sql`
+      SELECT COUNT(*)::int AS n FROM game_progress
+      WHERE user_id = ${auth.userId} AND (level > 100 OR game_id = 'warmup_routine')
     `,
     sql`SELECT badge_id FROM user_badges WHERE user_id = ${auth.userId}`,
   ]);
@@ -89,6 +97,7 @@ export default async function handler(req, res) {
   const earned = newBadges({
     totalSessions: agg.total_sessions,
     distinctGames: agg.distinct_games,
+    bookPlayed: book.n,
     streak, xp: newXp, score, stars, gameId, details,
   }, owned.map(r => r.badge_id));
 

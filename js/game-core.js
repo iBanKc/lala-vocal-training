@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { state, loadProfile, bestStars, unlockedLevel } from './state.js';
 import { ensureCalibrated } from './calibrate.js';
 import { BADGE_INFO } from './badges.js';
+import { BOOK, BOOK_EXERCISES, WARMUP_ROUTINES } from './curriculum.js';
 
 export const GAMES = {
   note_match:   { title: 'จับคู่โน้ต',   icon: '🎯', desc: 'ฟังโน้ตแล้วร้องตามให้ตรง', maxLevel: 10, available: true,  load: () => import('./games/note-match.js') },
@@ -10,6 +11,7 @@ export const GAMES = {
   melody_echo:  { title: 'ร้องตามทำนอง', icon: '🦜', desc: 'ฟังทำนองแล้วร้องตาม',    maxLevel: 12, available: true,  load: () => import('./games/melody-echo.js') },
   pitch_glide:  { title: 'เสียงพาบิน',   icon: '🎈', desc: 'ใช้เสียงบังคับลูกโป่งลอดห่วง', maxLevel: 10, available: true,  load: () => import('./games/pitch-glide.js') },
   song_compare: { title: 'ร้องเพลงเต็ม', icon: '🎤', desc: 'ร้องทั้งเพลงเทียบต้นฉบับ',  maxLevel: 1,  available: true,  load: () => import('./games/song-compare.js') },
+  warmup_routine: { title: 'วอร์มตามหนังสือ', icon: '🤸', desc: 'ท่าวอร์มร่างกาย ลม ลิ้น จากหนังสือ เสียงใหม่ฯ', maxLevel: WARMUP_ROUTINES.length, available: true, noCalibration: true, load: () => import('./games/warmup-routine.js') },
 };
 
 const pageGame = () => document.getElementById('pageGame');
@@ -37,19 +39,23 @@ export async function openGame(gameId) {
   const game = GAMES[gameId];
   if (!game || !game.available) return;
 
-  if (!(await ensureCalibrated())) return; // ต้องรู้ช่วงเสียงก่อน
+  if (!game.noCalibration && !(await ensureCalibrated())) return; // ต้องรู้ช่วงเสียงก่อน
 
   showPage('pageGame');
   const maxPlayable = unlockedLevel(gameId, game.maxLevel);
+  const bookList = BOOK_EXERCISES[gameId] || [];
 
-  gameRoot().innerHTML = `
-    <div class="game-header">
-      <button class="btn-back" id="gameBack">‹ กลับ</button>
-      <div class="game-title">${game.icon} ${game.title}</div>
-    </div>
-    <p class="game-desc">${game.desc}</p>
-    <div class="level-grid">
-      ${Array.from({ length: game.maxLevel }, (_, i) => {
+  // วอร์มตามหนังสือ: ทุก routine ปลดล็อก แสดงชื่อแทนตัวเลข
+  const levelButtons = gameId === 'warmup_routine'
+    ? WARMUP_ROUTINES.map(r => {
+        const stars = bestStars(gameId, r.level);
+        return `<button class="level-btn routine-btn" data-level="${r.level}">
+          <span class="level-num">${r.icon}</span>
+          <span class="routine-name">${r.name}</span>
+          <span class="level-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+        </button>`;
+      }).join('')
+    : Array.from({ length: game.maxLevel }, (_, i) => {
         const lv = i + 1;
         const locked = lv > maxPlayable;
         const stars = bestStars(gameId, lv);
@@ -57,11 +63,31 @@ export async function openGame(gameId) {
           <span class="level-num">${locked ? '🔒' : lv}</span>
           <span class="level-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
         </button>`;
-      }).join('')}
-    </div>`;
+      }).join('');
+
+  gameRoot().innerHTML = `
+    <div class="game-header">
+      <button class="btn-back" id="gameBack">‹ กลับ</button>
+      <div class="game-title">${game.icon} ${game.title}</div>
+    </div>
+    <p class="game-desc">${game.desc}</p>
+    <div class="level-grid ${gameId === 'warmup_routine' ? 'routine-grid' : ''}">${levelButtons}</div>
+    ${bookList.length ? `
+      <div class="section-title book-section-title">📖 แบบฝึกจากหนังสือ เสียงใหม่ฯ</div>
+      <div class="book-list">
+        ${bookList.map((ex, i) => {
+          const lv = 101 + i;
+          const stars = bestStars(gameId, lv);
+          return `<button class="book-btn" data-level="${lv}">
+            <span class="book-btn-name">${ex.name}</span>
+            <span class="book-btn-desc">${ex.desc}</span>
+            <span class="level-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span>
+          </button>`;
+        }).join('')}
+      </div>` : ''}`;
 
   gameRoot().querySelector('#gameBack').addEventListener('click', () => showPage('pageHub'));
-  gameRoot().querySelectorAll('.level-btn:not(.locked)').forEach(btn =>
+  gameRoot().querySelectorAll('.level-btn:not(.locked), .book-btn').forEach(btn =>
     btn.addEventListener('click', () => startRound(gameId, Number(btn.dataset.level))));
 }
 
@@ -72,11 +98,19 @@ export async function startRound(gameId, level) {
   const abort = new AbortController();
   activeAbort = abort;
 
+  // ด่านพิเศษจากหนังสือ (101+) / routine วอร์ม → ส่ง def เข้าโมดูลเกม
+  const exercise = level > 100 ? (BOOK_EXERCISES[gameId] || [])[level - 101] : null;
+  const routine = gameId === 'warmup_routine' ? WARMUP_ROUTINES[level - 1] : null;
+  const title = exercise ? `${BOOK.credit.slice(0, 2)} ${exercise.name}`
+    : routine ? `${routine.icon} ${routine.name}`
+    : `${game.icon} ${game.title} · ด่าน ${level}`;
+
   gameRoot().innerHTML = `
     <div class="game-header">
       <button class="btn-back" id="gameBack">‹ ออก</button>
-      <div class="game-title">${game.icon} ${game.title} · ด่าน ${level}</div>
+      <div class="game-title">${title}</div>
     </div>
+    ${exercise ? `<p class="game-desc book-tip">💡 ${exercise.tip}<br><small>${BOOK.credit}</small></p>` : ''}
     <div id="gameStage" class="game-stage"></div>`;
   gameRoot().querySelector('#gameBack').addEventListener('click', () => {
     abort.abort();
@@ -95,6 +129,8 @@ export async function startRound(gameId, level) {
       signal: abort.signal,
       voiceLow: state.user.voice_low_midi,
       voiceHigh: state.user.voice_high_midi,
+      exercise,
+      routine,
     });
   } catch (err) {
     if (!abort.signal.aborted) {
