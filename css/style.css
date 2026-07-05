@@ -882,3 +882,37 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .badge-emoji { font-size: 2rem; }
 .badge-name { font-weight: 700; }
 .badge-desc { font-size: 0.78rem; color: var(--text2); }
+
+/* ══════════ note-hold ══════════ */
+.nh-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--gap); flex: 1; }
+.nh-ring-wrap { position: relative; width: clamp(150px, 28vh, 230px); }
+.nh-ring { width: 100%; height: auto; }
+.nh-ring-text {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.nh-ring-text span { font-size: 2rem; font-weight: 700; color: var(--accent); }
+.nh-ring-text small { color: var(--text2); }
+.nh-wobble { width: 100%; max-width: 280px; font-size: 0.75rem; color: var(--text2); }
+.nh-wobble-track { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 3px; }
+.nh-wobble-bar { height: 100%; width: 0%; background: var(--green); transition: width 0.15s ease; border-radius: 4px; }
+
+/* ══════════ melody-echo ══════════ */
+.me-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; }
+.me-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--bg3); border: 1.5px solid var(--border);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.me-dot.playing { background: var(--accent2); transform: scale(1.35); }
+.me-dot.active { border-color: var(--accent); transform: scale(1.25); }
+.me-dot.good { background: var(--green); }
+.me-dot.mid { background: var(--yellow); }
+.me-dot.bad { background: var(--red); }
+.me-actions { display: flex; justify-content: center; }
+
+/* ══════════ pitch-glide ══════════ */
+.pg-hud { display: flex; justify-content: space-between; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+.pg-canvas-wrap { flex: 1; min-height: 220px; }
+.pg-canvas { width: 100%; height: 100%; border-radius: var(--radius-sm); }
