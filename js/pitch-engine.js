@@ -181,7 +181,7 @@ export function detectFreq(float32, sampleRate) {
 // ── noise floor → RMS threshold ──────────────────────────
 // ทิ้งช่วงแรก (iOS มี pop/settle หลังเปิดไมค์) ใช้ 25th percentile กันค่าเฟ้อ
 // clamp: floor 0.004 (AGC ปิดแล้วเสียงเบา — ต่ำพอสำหรับ head voice) / cap 0.02 (ห้องดังก็ยังร้องได้)
-export function computeRmsThreshold(samples, { skipMs = 250, mult = 2.5, floor = 0.004, cap = 0.02 } = {}) {
+export function computeRmsThreshold(samples, { skipMs = 250, mult = 2.5, floor = 0.004, cap = 0.03 } = {}) {
   const usable = samples.filter(s => s.t >= skipMs).map(s => s.rms).sort((a, b) => a - b);
   const pool = usable.length >= 4 ? usable : samples.map(s => s.rms).sort((a, b) => a - b);
   if (!pool.length) return { noiseFloor: 0, threshold: floor };
@@ -209,20 +209,31 @@ export class MicSession {
     this._tracker = new PitchTracker(clarityMin !== null ? { clarityMin } : {});
     this._wakeLock = null;
     this._onVis = () => {
-      if (this.running && document.visibilityState === 'visible') this._requestWakeLock();
+      if (this.running && document.visibilityState === 'visible') {
+        this._requestWakeLock();
+        this.resume(); // iOS ชอบ suspend context ตอนสลับแอป/พับจอ
+      }
     };
   }
 
   async start() {
     // สร้าง AudioContext ใน user gesture — จำเป็นบน iOS Safari
     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (this.audioCtx.state === 'suspended') await this.audioCtx.resume();
+    if (this.audioCtx.state === 'suspended') {
+      // ห้าม await resume() เฉย ๆ — บน iOS ถ้าไม่มี gesture promise จะค้างตลอดกาล
+      await Promise.race([
+        this.audioCtx.resume().catch(() => {}),
+        new Promise(r => setTimeout(r, 400)),
+      ]);
+    }
 
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: this.processed,
         noiseSuppression: this.processed,
-        autoGainControl: this.processed,
+        // AGC เปิดเสมอ: คุมเกนระดับ OS (จำเป็นบน iPhone ที่ input เบามาก)
+        // และไม่กระทบความแม่นยำ pitch — MPM ไม่ขึ้นกับ amplitude
+        autoGainControl: true,
       },
       video: false,
     });
@@ -242,11 +253,41 @@ export class MicSession {
     document.addEventListener('visibilitychange', this._onVis);
     if (this.onStatus) this.onStatus('calibrating');
     this._loop();
+
+    // iOS: ถ้า context ยังไม่วิ่ง (resume ไม่มี gesture รองรับ) → รอผู้ใช้แตะจอหนึ่งครั้ง
+    if (this.audioCtx.state !== 'running') {
+      if (this.onStatus) this.onStatus('suspended');
+      const onTap = () => this.resume();
+      document.addEventListener('pointerdown', onTap, { once: true });
+      this.audioCtx.onstatechange = () => {
+        if (this.audioCtx.state === 'running' && this.onStatus) {
+          this.onStatus(this.calibrated ? 'ready' : 'calibrating');
+        }
+      };
+    }
+  }
+
+  // เรียกได้จาก user gesture ใด ๆ เพื่อปลุก context ที่ iOS แช่ไว้
+  resume() {
+    if (this.audioCtx && this.audioCtx.state !== 'running') {
+      this.audioCtx.resume().catch(() => { /* รอ gesture ถัดไป */ });
+    }
   }
 
   _loop() {
     if (!this.running) return;
     this._raf = requestAnimationFrame(() => this._loop());
+
+    // context ยังไม่วิ่ง (iOS suspended) → analyser คืนแต่ศูนย์
+    // ห้ามเอาไปนับ noise floor — เลื่อนจุดเริ่ม calibrate ออกไปจนกว่าเสียงจะไหลจริง
+    if (this.audioCtx.state !== 'running') {
+      if (this._calibrating) {
+        this._calibrateStart = performance.now();
+        this._calibrateRms = [];
+      }
+      return;
+    }
+
     this.analyser.getFloatTimeDomainData(this._buf);
 
     let rms = 0;

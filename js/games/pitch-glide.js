@@ -191,6 +191,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   const mic = new MicSession({
     onStatus: s => {
       if (s === 'calibrating') instrEl.textContent = 'เงียบสักครู่... กำลังวัดเสียงรอบข้าง';
+      if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
     },
     onFrame: frame => {
       const dt = lastFrameMs === null ? 16 : frame.time - lastFrameMs;

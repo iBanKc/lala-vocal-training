@@ -53,6 +53,7 @@ export async function run({ stage, signal, routine }) {
             onStatus: s => {
               if (s === 'calibrating') statusEl.textContent = 'เงียบสักครู่... กำลังวัดเสียงรอบข้าง';
               if (s === 'ready') statusEl.textContent = 'สูดลมลึก แล้ว "สสส" ยาว ๆ!';
+              if (s === 'suspended') statusEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
             },
             onFrame: frame => {
               const now = frame.time;

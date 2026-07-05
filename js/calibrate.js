@@ -1,17 +1,19 @@
 // วัดช่วงเสียง (voice range calibration) — ครั้งแรกก่อนเล่นเกม / วัดใหม่ได้จาก hub
 //
-// บทเรียนจากการทดสอบ iPhone จริง: เสียงสูง/head voice มี RMS เบากว่าเสียงอกมาก
-// (โดยเฉพาะเมื่อปิด AGC) จนไม่ผ่าน noise gate ของเกมเลย — หน้านี้จึงใช้เส้นทาง raw
-// ของ MicSession (detector รันที่ floor จิ๋ว, ตัดสินด้วย clarity แทน RMS) และมี
-// ทางหนีเสมอ: ปุ่ม "ใช้โน้ตนี้" + preset ชาย/หญิง/เด็ก — ไม่มีใครติดค้างที่หน้านี้
-import { MicSession, freqToMidi, freqToNoteInfo, midiToNoteName } from './pitch-engine.js';
+// บทเรียน iPhone (จากภาพ ?debug=1 ของเจ้าของ):
+// 1. iOS อนุญาตเปิด/ปลุก AudioContext เฉพาะใน user gesture — เดิมเราปิด-เปิดไมค์ใหม่
+//    ระหว่างขั้นโดยอัตโนมัติ ทำให้ขั้น "โน้ตสูงสุด" ไม่เคยเริ่มฟังเลย
+//    → เปิดไมค์ครั้งเดียวตอนกด "เริ่มวัด" ใช้ยาวทั้ง flow และคั่นขั้นด้วยปุ่ม (gesture ใหม่)
+// 2. เสียงสูง/head voice เบากว่าเสียงอกมาก → ตัดสินด้วย clarity จากเส้นทาง raw ไม่ใช่ความดัง
+// 3. มีทางหนีเสมอ: ปุ่ม "ใช้โน้ตนี้" + preset ชาย/หญิง/เด็ก — ไม่มีใครติดค้างที่หน้านี้
+import { MicSession, freqToMidi, midiToFreq, freqToNoteInfo, midiToNoteName } from './pitch-engine.js';
 import { api } from './api.js';
 import { state, loadProfile } from './state.js';
 
-const STEPS = [
-  { key: 'low',  title: 'โน้ตต่ำสุด',  hint: 'ไล่เสียง "อา" ลงต่ำช้า ๆ จนถึงโน้ตต่ำสุดที่ร้องได้สบาย แล้วค้างเสียงไว้' },
-  { key: 'high', title: 'โน้ตสูงสุด', hint: 'ไล่เสียง "วู้" ขึ้นช้า ๆ จนถึงโน้ตสูงสุดที่ร้องได้สบาย แล้วค้างเสียงไว้ (เสียงหลบได้)' },
-];
+const STEPS = {
+  low:  { title: 'โน้ตต่ำสุด',  hint: 'ไล่เสียง "อา" ลงต่ำช้า ๆ จนถึงโน้ตต่ำสุดที่ร้องได้สบาย แล้วค้างเสียงไว้' },
+  high: { title: 'โน้ตสูงสุด', hint: 'ไล่เสียง "วู้" ขึ้นช้า ๆ จนถึงโน้ตสูงสุดที่ร้องได้สบาย แล้วค้างเสียงไว้ (เสียงหลบได้)' },
+};
 
 // ช่วงเสียงสำเร็จรูป — ทางลัดถ้าไม่อยากวัด/วัดไม่ผ่าน
 const PRESETS = [
@@ -22,6 +24,13 @@ const PRESETS = [
 
 const RAW_CLARITY_MIN = 0.6;   // เกณฑ์รับ pitch จากเส้นทาง raw (ผ่อนสำหรับเสียง breathy)
 const QUIET_RMS = 0.004;       // ต่ำกว่านี้ถือว่า "เสียงเบาไป" (สำหรับ hint)
+
+// ขอบเขตความถี่ต่อขั้น — กัน mains hum (~100Hz) และค่าหลงเข้าหน้าต่างตอนวัดเสียงสูง
+export function stepFreqBounds(stepKey, lowMidi = null) {
+  if (stepKey === 'low') return { fmin: 55, fmax: 500 };
+  const fmin = lowMidi !== null ? Math.max(130, midiToFreq(lowMidi + 4)) : 130;
+  return { fmin, fmax: 1400 };
+}
 
 function median(arr) {
   const s = [...arr].sort((a, b) => a - b);
@@ -42,7 +51,6 @@ export class TrailingCapture {
     this._lastVoiced = -Infinity;
   }
 
-  // คืน { progress 0..1, candidate (median ของ window) | null, captured midi | null, manualReady }
   push(time, midi) {
     if (midi === null) {
       if (time - this._lastVoiced > this.gapMs) this._runStart = null;
@@ -75,7 +83,6 @@ export class TrailingCapture {
     };
   }
 
-  // สำหรับปุ่ม "ใช้โน้ตนี้": median ของช่วงท้ายล่าสุด
   manualCapture(now) {
     const recent = this._frames.filter(f => f.time >= now - Math.max(600, this.manualMinMs));
     return recent.length >= 5 ? Math.round(median(recent.map(f => f.midi))) : null;
@@ -104,6 +111,7 @@ export function runCalibration() {
         <div class="cal-debug ${debug ? '' : 'hidden'}" id="calDebug"></div>
         <div class="overlay-actions">
           <button class="btn-start" id="calAction">เริ่มวัด</button>
+          <button class="btn-start hidden" id="calNext">ต่อไป: วัดโน้ตสูงสุด ▶</button>
           <button class="btn-secondary hidden" id="calManual">✓ ใช้โน้ตนี้</button>
           <button class="btn-secondary" id="calCancel">ยกเลิก</button>
         </div>
@@ -119,13 +127,16 @@ export function runCalibration() {
     const el = id => overlay.querySelector('#' + id);
     const titleEl = el('calTitle'), hintEl = el('calHint'), noteEl = el('calNote');
     const vuEl = el('calVu'), barEl = el('calBar'), statusEl = el('calStatus');
-    const debugEl = el('calDebug'), actionBtn = el('calAction');
+    const debugEl = el('calDebug'), actionBtn = el('calAction'), nextBtn = el('calNext');
     const manualBtn = el('calManual'), cancelBtn = el('calCancel');
 
     let mic = null;
+    let step = null;        // { key, cap, bounds, lastLoudMs, lastClearMs }
+    let hintTimer = null;
     const results = {};
 
     function cleanup(ok) {
+      clearInterval(hintTimer);
       if (mic) { mic.stop(); mic = null; }
       overlay.remove();
       resolve(ok);
@@ -148,115 +159,156 @@ export function runCalibration() {
         }
       }));
 
-    function measureStep(step) {
-      return new Promise((res, rej) => {
-        titleEl.textContent = `🎙️ ${step.title}`;
-        hintEl.textContent = step.hint;
-        noteEl.textContent = '—';
-        barEl.style.width = '0%';
-        statusEl.textContent = '';
-        manualBtn.classList.add('hidden');
+    // ── เริ่มขั้นวัด (ไมค์ตัวเดิม แค่รีเซ็ตตัวจับ + จอ) ──
+    function beginStep(key) {
+      const def = STEPS[key];
+      step = {
+        key,
+        cap: new TrailingCapture(),
+        bounds: stepFreqBounds(key, results.low ?? null),
+        lastLoudMs: 0,
+        lastClearMs: 0,
+      };
+      titleEl.textContent = `🎙️ ${def.title}`;
+      hintEl.textContent = def.hint;
+      noteEl.textContent = '—';
+      barEl.style.width = '0%';
+      vuEl.style.width = '0%';
+      debugEl.textContent = '';
+      statusEl.textContent = 'ร้องได้เลย!';
+      manualBtn.classList.add('hidden');
+      nextBtn.classList.add('hidden');
+    }
 
-        const cap = new TrailingCapture();
-        let done = false;
-        let lastLoudMs = 0;   // rms ≥ QUIET_RMS ล่าสุด
-        let lastClearMs = 0;  // raw pitch clarity ผ่านล่าสุด
-        let heardAnything = false;
+    function finishStep(midi) {
+      if (midi === null || !step) return;
+      const key = step.key;
+      step = null;
+      manualBtn.classList.add('hidden');
+      results[key] = midi;
+      statusEl.textContent = `✅ ${STEPS[key].title}: ${midiToNoteName(midi)}`;
+      barEl.style.width = '100%';
 
-        const finish = midi => {
-          if (done || midi === null) return;
-          done = true;
-          clearInterval(hintTimer);
-          manualBtn.classList.add('hidden');
-          if (mic) { mic.stop(); mic = null; }
-          res(midi);
-        };
+      if (key === 'low') {
+        // คั่นด้วยปุ่ม = user gesture ใหม่ (iOS) + ให้ผู้ใช้ตั้งหลัก
+        titleEl.textContent = '🎙️ เยี่ยม! ต่อไปวัดโน้ตสูงสุด';
+        hintEl.textContent = 'พักหายใจสักครู่ พร้อมแล้วกดปุ่มด้านล่าง';
+        nextBtn.classList.remove('hidden');
+        return;
+      }
 
-        manualBtn.onclick = () => finish(cap.manualCapture(performance.now()));
+      // ขั้น high จบ → ตรวจ + บันทึก
+      (async () => {
+        if (results.high - results.low < 5) {
+          statusEl.textContent = '⚠️ ช่วงเสียงแคบเกินไป — ลองใหม่ (สูง/ต่ำให้ต่างกันชัด ๆ) หรือใช้ปุ่มเลือกแบบเร็ว';
+          actionBtn.textContent = 'วัดใหม่';
+          actionBtn.disabled = false;
+          actionBtn.classList.remove('hidden');
+          return;
+        }
+        try {
+          await api('/api/me', { method: 'PATCH', body: { voice_low_midi: results.low, voice_high_midi: results.high } });
+          await loadProfile();
+          statusEl.textContent = `🎉 ช่วงเสียงของคุณ: ${midiToNoteName(results.low)} – ${midiToNoteName(results.high)}`;
+          setTimeout(() => cleanup(true), 1400);
+        } catch (err) {
+          statusEl.textContent = '⚠️ ' + (err.message || 'บันทึกไม่สำเร็จ ลองใหม่');
+          actionBtn.textContent = 'วัดใหม่';
+          actionBtn.disabled = false;
+          actionBtn.classList.remove('hidden');
+        }
+      })();
+    }
 
-        // hint ตามเกตที่ไม่ผ่าน — ผู้ใช้รู้เสมอว่าต้องปรับอะไร
-        const hintTimer = setInterval(() => {
-          if (done || !mic || !mic.calibrated) return;
-          const now = performance.now();
-          if (now - lastLoudMs > 900) {
-            statusEl.textContent = '🔈 เสียงเบาไป — ขยับมือถือเข้าใกล้ปาก หรือร้องดังขึ้นอีกนิด';
-          } else if (now - lastClearMs > 900) {
-            statusEl.textContent = 'ได้ยินแล้ว แต่ยังไม่ชัด — ลองร้องสระ "อา" หรือ "อู" ตรง ๆ';
-          } else {
-            statusEl.textContent = '✓ ได้ยินชัดแล้ว! ค้างเสียงไว้นิ่ง ๆ...';
-          }
-        }, 700);
+    manualBtn.addEventListener('click', () => {
+      if (step) finishStep(step.cap.manualCapture(performance.now()));
+    });
 
+    nextBtn.addEventListener('click', () => {
+      if (mic) mic.resume(); // gesture นี้ปลุก context ได้ ถ้า iOS แช่ไว้
+      beginStep('high');
+    });
+
+    function onFrame(frame) {
+      // VU meter ขยับเสมอ (sqrt scale ให้เสียงเบาก็เห็น)
+      const vuPct = Math.min(100, Math.sqrt(frame.rms / 0.05) * 100);
+      vuEl.style.width = vuPct + '%';
+      vuEl.style.background = frame.rms >= QUIET_RMS ? '#16a34a' : '#94a3b8';
+      if (frame.calibrating || !step) return;
+
+      if (frame.rms >= QUIET_RMS) step.lastLoudMs = frame.time;
+
+      const raw = frame.raw;
+      const ok = raw && raw.clarity >= RAW_CLARITY_MIN &&
+        raw.freq >= step.bounds.fmin && raw.freq <= step.bounds.fmax;
+      if (ok) {
+        step.lastClearMs = frame.time;
+        const info = freqToNoteInfo(raw.freq);
+        noteEl.textContent = `${info.note}${info.octave}`;
+      }
+      if (debug) {
+        debugEl.textContent =
+          `[${step.key}] rms ${frame.rms.toFixed(4)} | thr ${mic ? mic.rmsThreshold.toFixed(4) : '-'} | ` +
+          `clarity ${raw ? raw.clarity.toFixed(2) : '-'} | freq ${raw ? raw.freq.toFixed(0) : '-'} | ctx ${mic?.audioCtx?.state}`;
+      }
+
+      const st = step.cap.push(frame.time, ok ? freqToMidi(raw.freq) : null);
+      barEl.style.width = Math.round(st.progress * 100) + '%';
+      if (st.manualReady && st.candidate !== null) {
+        manualBtn.textContent = `✓ ใช้โน้ตนี้ (${midiToNoteName(Math.round(st.candidate))})`;
+        manualBtn.classList.remove('hidden');
+      }
+      if (st.captured !== null) finishStep(st.captured);
+    }
+
+    // hint ตามเกตที่ไม่ผ่าน — ผู้ใช้รู้เสมอว่าต้องปรับอะไร
+    function startHints() {
+      hintTimer = setInterval(() => {
+        if (!step || !mic || !mic.calibrated) return;
+        const now = performance.now();
+        if (now - step.lastLoudMs > 900) {
+          statusEl.textContent = '🔈 เสียงเบาไป — ขยับมือถือเข้าใกล้ปาก หรือร้องดังขึ้นอีกนิด';
+        } else if (now - step.lastClearMs > 900) {
+          statusEl.textContent = 'ได้ยินแล้ว แต่ยังไม่ชัด — ลองร้องสระ "อา" หรือ "อู" ตรง ๆ';
+        } else {
+          statusEl.textContent = '✓ ได้ยินชัดแล้ว! ค้างเสียงไว้นิ่ง ๆ...';
+        }
+      }, 700);
+    }
+
+    // ── เริ่มวัด: เปิดไมค์ครั้งเดียว (ใน gesture นี้) ใช้ทั้ง flow ──
+    actionBtn.addEventListener('click', async () => {
+      actionBtn.disabled = true;
+      actionBtn.textContent = 'กำลังวัด...';
+      actionBtn.classList.add('hidden');
+      delete results.low;
+      delete results.high;
+
+      if (!mic) {
         mic = new MicSession({
           emitRaw: true,
           onStatus: s => {
             if (s === 'calibrating') statusEl.textContent = 'เงียบสักครู่... กำลังวัดเสียงรอบข้าง';
             if (s === 'ready') statusEl.textContent = 'ร้องได้เลย!';
+            if (s === 'suspended') statusEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
           },
-          onFrame: frame => {
-            if (done) return;
-            // VU meter (sqrt scale ให้เสียงเบาก็เห็นแถบขยับ)
-            const vuPct = Math.min(100, Math.sqrt(frame.rms / 0.05) * 100);
-            vuEl.style.width = vuPct + '%';
-            vuEl.style.background = frame.rms >= QUIET_RMS ? '#16a34a' : '#94a3b8';
-            if (frame.calibrating) return;
-
-            if (frame.rms >= QUIET_RMS) lastLoudMs = frame.time;
-
-            // เส้นทาง raw: ตัดสินด้วย clarity ไม่ใช่ความดัง — head voice เบา ๆ ก็ผ่าน
-            const raw = frame.raw;
-            const ok = raw && raw.clarity >= RAW_CLARITY_MIN && raw.freq >= 55 && raw.freq <= 1400;
-            if (ok) {
-              lastClearMs = frame.time;
-              heardAnything = true;
-              const info = freqToNoteInfo(raw.freq);
-              noteEl.textContent = `${info.note}${info.octave}`;
-            }
-            if (debug) {
-              debugEl.textContent =
-                `rms ${frame.rms.toFixed(4)} | thr ${mic ? mic.rmsThreshold.toFixed(4) : '-'} | ` +
-                `clarity ${raw ? raw.clarity.toFixed(2) : '-'} | freq ${raw ? raw.freq.toFixed(0) : '-'}`;
-            }
-
-            const st = cap.push(frame.time, ok ? freqToMidi(raw.freq) : null);
-            barEl.style.width = Math.round(st.progress * 100) + '%';
-            if (st.manualReady && st.candidate !== null) {
-              manualBtn.textContent = `✓ ใช้โน้ตนี้ (${midiToNoteName(Math.round(st.candidate))})`;
-              manualBtn.classList.remove('hidden');
-            }
-            if (st.captured !== null) finish(st.captured);
-          },
+          onFrame,
         });
-        mic.start().catch(err => { clearInterval(hintTimer); rej(err); });
-      });
-    }
-
-    actionBtn.addEventListener('click', async () => {
-      actionBtn.disabled = true;
-      actionBtn.textContent = 'กำลังวัด...';
-      try {
-        for (const step of STEPS) {
-          const midi = await measureStep(step);
-          results[step.key] = midi;
-          statusEl.textContent = `✅ ${step.title}: ${midiToNoteName(midi)}`;
-          await new Promise(r => setTimeout(r, 900));
-        }
-        if (results.high - results.low < 5) {
-          statusEl.textContent = '⚠️ ช่วงเสียงแคบเกินไป — ลองใหม่ (สูง/ต่ำให้ต่างกันชัด ๆ) หรือใช้ปุ่มเลือกแบบเร็วด้านล่าง';
+        try {
+          await mic.start();
+        } catch (err) {
+          mic = null;
+          statusEl.textContent = '⚠️ เปิดไมค์ไม่ได้: ' + (err.message || '') + ' — ใช้ปุ่มเลือกแบบเร็วด้านล่างได้';
+          actionBtn.textContent = 'ลองอีกครั้ง';
           actionBtn.disabled = false;
-          actionBtn.textContent = 'วัดใหม่';
+          actionBtn.classList.remove('hidden');
           return;
         }
-        await api('/api/me', { method: 'PATCH', body: { voice_low_midi: results.low, voice_high_midi: results.high } });
-        await loadProfile();
-        statusEl.textContent = `🎉 ช่วงเสียงของคุณ: ${midiToNoteName(results.low)} – ${midiToNoteName(results.high)}`;
-        actionBtn.textContent = 'เสร็จสิ้น';
-        setTimeout(() => cleanup(true), 1400);
-      } catch (err) {
-        statusEl.textContent = '⚠️ ' + (err.message || 'วัดไม่สำเร็จ ลองใหม่ หรือใช้ปุ่มเลือกแบบเร็ว');
-        actionBtn.disabled = false;
-        actionBtn.textContent = 'วัดใหม่';
+        startHints();
+      } else {
+        mic.resume();
       }
+      beginStep('low');
     });
   });
 }

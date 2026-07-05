@@ -60,6 +60,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   const mic = new MicSession({
     onStatus: s => {
       if (s === 'calibrating') instrEl.textContent = 'เงียบสักครู่... กำลังวัดเสียงรอบข้าง';
+      if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
     },
     onFrame: frame => {
       if (!listening || done) { lastTime = frame.time; return; }
@@ -191,6 +192,7 @@ async function runCrescendo({ stage, signal, voiceLow, voiceHigh, exercise }) {
   const mic = new MicSession({
     onStatus: s => {
       if (s === 'calibrating') instrEl.textContent = 'เงียบสักครู่... กำลังวัดเสียงรอบข้าง';
+      if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
     },
     onFrame: frame => {
       if (!listening || t0 === null) return;

@@ -209,6 +209,9 @@ export async function run({ level, stage, signal }) {
 
   const mic = new MicSession({
     processed: true,
+    onStatus: s => {
+      if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
+    },
     onFrame: frame => {
       if (playStartPerf === null) return;
       const songT = (frame.time - playStartPerf) / 1000 - LATENCY;
