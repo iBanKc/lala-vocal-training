@@ -178,11 +178,25 @@ export function detectFreq(float32, sampleRate) {
   return { freq, clarity };
 }
 
+// ── noise floor → RMS threshold ──────────────────────────
+// ทิ้งช่วงแรก (iOS มี pop/settle หลังเปิดไมค์) ใช้ 25th percentile กันค่าเฟ้อ
+// clamp: floor 0.004 (AGC ปิดแล้วเสียงเบา — ต่ำพอสำหรับ head voice) / cap 0.02 (ห้องดังก็ยังร้องได้)
+export function computeRmsThreshold(samples, { skipMs = 250, mult = 2.5, floor = 0.004, cap = 0.02 } = {}) {
+  const usable = samples.filter(s => s.t >= skipMs).map(s => s.rms).sort((a, b) => a - b);
+  const pool = usable.length >= 4 ? usable : samples.map(s => s.rms).sort((a, b) => a - b);
+  if (!pool.length) return { noiseFloor: 0, threshold: floor };
+  const noiseFloor = pool[Math.floor(pool.length * 0.25)];
+  return { noiseFloor, threshold: Math.min(cap, Math.max(floor, noiseFloor * mult)) };
+}
+
 // ── MicSession: ไมค์ + calibrate noise floor + wake lock ──
 // ค่า default ปิด echoCancellation/noiseSuppression/autoGainControl —
 // DSP พวกนี้ออกแบบมาสำหรับเสียงพูด บิดเบือนเสียงร้องก่อนถึงตัววัด
+// emitRaw: รัน detector ที่ floor จิ๋ว (0.002) และแนบ frame.raw = {freq, clarity}
+// สำหรับโหมดที่ต้องผ่อนปรน (วัดช่วงเสียง) — เส้นทาง voiced ของเกมไม่เปลี่ยน
 export class MicSession {
-  constructor({ processed = false, fftSize = 4096, calibrateMs = 500, clarityMin = null, onFrame = null, onStatus = null } = {}) {
+  constructor({ processed = false, fftSize = 4096, calibrateMs = 700, clarityMin = null, emitRaw = false, onFrame = null, onStatus = null } = {}) {
+    this.emitRaw = emitRaw;
     this.processed = processed;
     this.fftSize = fftSize;
     this.calibrateMs = calibrateMs;
@@ -241,23 +255,31 @@ export class MicSession {
     const now = performance.now();
 
     if (this._calibrating) {
-      this._calibrateRms.push(rms);
+      this._calibrateRms.push({ t: now - this._calibrateStart, rms });
       if (now - this._calibrateStart >= this.calibrateMs) {
-        this.noiseFloor = median(this._calibrateRms);
-        this.rmsThreshold = Math.max(0.006, this.noiseFloor * 3);
+        const { noiseFloor, threshold } = computeRmsThreshold(this._calibrateRms);
+        this.noiseFloor = noiseFloor;
+        this.rmsThreshold = threshold;
         this._calibrating = false;
         this.calibrated = true;
         if (this.onStatus) this.onStatus('ready');
+      } else if (this.emitRaw && this.onFrame) {
+        // ให้ VU meter ขยับได้ตั้งแต่วินาทีแรก
+        this.onFrame({ time: now, rms, voiced: false, freq: null, midi: null, clarity: 0, calibrating: true });
       }
       return;
     }
 
     const frame = { time: now, rms, voiced: false, freq: null, midi: null, clarity: 0 };
-    if (rms >= this.rmsThreshold) {
+    // เส้นทาง raw (วัดช่วงเสียง): รัน detector ที่ floor จิ๋ว ไม่อิง noise threshold
+    if (rms >= this.rmsThreshold || (this.emitRaw && rms >= 0.002)) {
       const { freq, clarity } = detectFreq(this._buf, this.audioCtx.sampleRate);
       frame.clarity = clarity;
-      const p = this._tracker.push(freq, clarity, now);
-      if (p) { frame.voiced = true; frame.freq = p.freq; frame.midi = p.midi; }
+      if (this.emitRaw) frame.raw = { freq, clarity };
+      if (rms >= this.rmsThreshold) {
+        const p = this._tracker.push(freq, clarity, now);
+        if (p) { frame.voiced = true; frame.freq = p.freq; frame.midi = p.midi; }
+      }
     }
     if (this.onFrame) this.onFrame(frame);
   }

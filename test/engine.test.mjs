@@ -3,7 +3,7 @@
 // เกณฑ์: ตัววัดต้องรายงานภายใน ±3 cents ของค่าจริง รวมเคสจงใจเพี้ยน
 
 import {
-  detectFreq, PitchTracker, SegmentTracker, segmentStats,
+  detectFreq, PitchTracker, SegmentTracker, segmentStats, computeRmsThreshold,
   freqToMidi, midiToFreq, noteToFreq, freqToNoteInfo, foldCents, scoreFromCents,
 } from '../js/pitch-engine.js';
 
@@ -154,7 +154,32 @@ console.log('\n── 6. TrailingCapture: วัดช่วงเสียง (
   check(`manualCapture คืน G4 (ได้ ${cap4.manualCapture(800)})`, cap4.manualCapture(800) === 67);
 }
 
-console.log('\n── 7. utilities ──');
+console.log('\n── 7. computeRmsThreshold: noise floor บนมือถือจริง ──');
+{
+  const mk = pairs => pairs.flatMap(([t0, t1, rms]) => {
+    const out = [];
+    for (let t = t0; t < t1; t += 16) out.push({ t, rms });
+    return out;
+  });
+
+  // iOS pop ช่วง 200ms แรก (ดัง 0.05) แล้วห้องเงียบจริง 0.001 → pop ต้องไม่ทำให้ threshold เฟ้อ
+  const pop = computeRmsThreshold(mk([[0, 200, 0.05], [200, 700, 0.001]]));
+  check(`pop ตอนเปิดไมค์ไม่เฟ้อ: threshold ${pop.threshold} (คาด 0.004 floor)`, pop.threshold === 0.004);
+
+  // ห้องเงียบสนิท → floor 0.004 (ต่ำพอให้ head voice เบา ๆ ผ่าน)
+  const quiet = computeRmsThreshold(mk([[0, 700, 0.0005]]));
+  check(`ห้องเงียบ → floor 0.004 (ได้ ${quiet.threshold})`, quiet.threshold === 0.004);
+
+  // ห้องดังมาก (0.03) → cap ที่ 0.02 ไม่ใช่ 0.075
+  const noisy = computeRmsThreshold(mk([[0, 700, 0.03]]));
+  check(`ห้องดัง → cap 0.02 (ได้ ${noisy.threshold})`, noisy.threshold === 0.02);
+
+  // ห้องปกติ (0.003) → 0.003×2.5 = 0.0075
+  const normal = computeRmsThreshold(mk([[0, 700, 0.003]]));
+  check(`ห้องปกติ 0.003 → ${normal.threshold} (คาด 0.0075)`, Math.abs(normal.threshold - 0.0075) < 1e-9);
+}
+
+console.log('\n── 8. utilities ──');
 check('noteToFreq A4 = 440', Math.abs(noteToFreq('A', 4) - 440) < 0.01);
 check('freqToNoteInfo 452Hz = A4 +46.6¢', (() => { const i = freqToNoteInfo(452); return i.note === 'A' && i.octave === 4 && Math.abs(i.cents - 46.6) < 1; })());
 check('foldCents: ร้องต่ำ 1 อ็อกเทฟ = 0¢', foldCents(-1200) === 0);
