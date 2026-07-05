@@ -189,6 +189,7 @@ export class MicSession {
     this.onFrame = onFrame;
     this.onStatus = onStatus;
     this.running = false;
+    this.calibrated = false;
     this.noiseFloor = 0;
     this.rmsThreshold = 0.006;
     this._tracker = new PitchTracker();
@@ -245,6 +246,7 @@ export class MicSession {
         this.noiseFloor = median(this._calibrateRms);
         this.rmsThreshold = Math.max(0.006, this.noiseFloor * 3);
         this._calibrating = false;
+        this.calibrated = true;
         if (this.onStatus) this.onStatus('ready');
       }
       return;

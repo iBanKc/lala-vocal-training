@@ -55,9 +55,21 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════
-         PAGE: PITCH TRAINER
+         PAGE: HUB (หน้าหลัก)
     ═══════════════════════════════════════════════ -->
-    <div id="pagePitch" class="page active">
+    <div id="pageHub" class="page active"></div>
+
+    <!-- ═══════════════════════════════════════════════
+         PAGE: GAME (เข้าจากการ์ดเกมบน hub)
+    ═══════════════════════════════════════════════ -->
+    <div id="pageGame" class="page">
+      <div id="gameRoot"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         PAGE: PITCH TRAINER (ฝึกอิสระ)
+    ═══════════════════════════════════════════════ -->
+    <div id="pagePitch" class="page">
 
       <section class="pitch-section">
         <div class="current-note" id="currentNote">—</div>
@@ -235,9 +247,13 @@
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav">
-    <button class="nav-btn active" data-page="pagePitch">
+    <button class="nav-btn active" data-page="pageHub">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">หน้าหลัก</span>
+    </button>
+    <button class="nav-btn" data-page="pagePitch">
       <span class="nav-icon">🎵</span>
-      <span class="nav-label">ฝึกโน้ต</span>
+      <span class="nav-label">ฝึกอิสระ</span>
     </button>
     <button class="nav-btn" data-page="pageCompare">
       <span class="nav-icon">🎤</span>
@@ -246,6 +262,7 @@
   </nav>
 
   <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/hub.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module" src="compare.js"></script>
 </body>
