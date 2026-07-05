@@ -182,7 +182,7 @@ export function detectFreq(float32, sampleRate) {
 // ค่า default ปิด echoCancellation/noiseSuppression/autoGainControl —
 // DSP พวกนี้ออกแบบมาสำหรับเสียงพูด บิดเบือนเสียงร้องก่อนถึงตัววัด
 export class MicSession {
-  constructor({ processed = false, fftSize = 4096, calibrateMs = 500, onFrame = null, onStatus = null } = {}) {
+  constructor({ processed = false, fftSize = 4096, calibrateMs = 500, clarityMin = null, onFrame = null, onStatus = null } = {}) {
     this.processed = processed;
     this.fftSize = fftSize;
     this.calibrateMs = calibrateMs;
@@ -192,7 +192,7 @@ export class MicSession {
     this.calibrated = false;
     this.noiseFloor = 0;
     this.rmsThreshold = 0.006;
-    this._tracker = new PitchTracker();
+    this._tracker = new PitchTracker(clarityMin !== null ? { clarityMin } : {});
     this._wakeLock = null;
     this._onVis = () => {
       if (this.running && document.visibilityState === 'visible') this._requestWakeLock();

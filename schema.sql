@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_practice_date DATE,
   voice_low_midi  INTEGER,
   voice_high_midi INTEGER,
+  is_guest       BOOLEAN NOT NULL DEFAULT false,
   is_active      BOOLEAN NOT NULL DEFAULT true,
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

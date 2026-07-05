@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const [students, activity] = await Promise.all([
       sql`
-        SELECT u.id, u.username, u.display_name, u.xp, u.streak_days, u.is_active,
+        SELECT u.id, u.username, u.display_name, u.xp, u.streak_days, u.is_active, u.is_guest,
                u.voice_low_midi, u.voice_high_midi, u.created_at,
                MAX(s.created_at) AS last_active,
                COUNT(s.id)::int AS sessions_total,
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         ORDER BY u.display_name
       `,
       sql`
-        SELECT s.created_at, s.game_id, s.level, s.score, s.stars, u.display_name, u.id AS user_id
+        SELECT s.created_at, s.game_id, s.level, s.score, s.stars, u.display_name, u.id AS user_id, u.is_guest
         FROM game_sessions s JOIN users u ON u.id = s.user_id
         ORDER BY s.created_at DESC LIMIT 50
       `,

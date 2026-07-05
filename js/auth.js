@@ -5,8 +5,27 @@ import { state, loadProfile } from './state.js';
 const loginForm   = document.getElementById('loginForm');
 const loginError  = document.getElementById('loginError');
 const loginBtn    = document.getElementById('loginSubmit');
+const guestForm   = document.getElementById('guestForm');
+const guestError  = document.getElementById('guestError');
+const guestBtn    = document.getElementById('guestSubmit');
 const userNameEl  = document.getElementById('headerUserName');
 const logoutBtn   = document.getElementById('logoutBtn');
+
+// สลับระหว่างฟอร์มผู้เยี่ยมชม (ค่าเริ่มต้น) กับ login นักเรียน/ครู
+document.getElementById('showLoginLink').addEventListener('click', e => {
+  e.preventDefault();
+  guestForm.classList.add('hidden');
+  document.getElementById('showLoginLink').parentElement.classList.add('hidden');
+  loginForm.classList.remove('hidden');
+  document.getElementById('backToGuestHint').classList.remove('hidden');
+});
+document.getElementById('showGuestLink').addEventListener('click', e => {
+  e.preventDefault();
+  loginForm.classList.add('hidden');
+  document.getElementById('backToGuestHint').classList.add('hidden');
+  guestForm.classList.remove('hidden');
+  document.getElementById('showLoginLink').parentElement.classList.remove('hidden');
+});
 
 function showLogin() {
   state.user = null;
@@ -41,6 +60,26 @@ loginForm.addEventListener('submit', async e => {
   } finally {
     loginBtn.disabled = false;
     loginBtn.textContent = 'เข้าสู่ระบบ';
+  }
+});
+
+guestForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  guestError.textContent = '';
+  guestBtn.disabled = true;
+  guestBtn.textContent = 'กำลังเตรียมเวที...';
+  try {
+    const nickname = document.getElementById('guestNickname').value;
+    const { token } = await api('/api/guest', { method: 'POST', body: { nickname } });
+    setToken(token);
+    await loadProfile();
+    showApp();
+    guestForm.reset();
+  } catch (err) {
+    guestError.textContent = err.message || 'เริ่มไม่สำเร็จ ลองอีกครั้ง';
+  } finally {
+    guestBtn.disabled = false;
+    guestBtn.textContent = '🎵 เริ่มเลย!';
   }
 });
 

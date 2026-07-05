@@ -18,8 +18,22 @@
     <div class="login-card">
       <img src="assets/logo.PNG" alt="Blues Dot Music" class="login-logo" />
       <h1 class="login-title">Let's Sing</h1>
-      <p class="login-sub">เกมฝึกร้องเพลง สำหรับนักเรียน Blues Dot Music</p>
-      <form id="loginForm" autocomplete="on">
+      <p class="login-sub">เกมฝึกร้องเพลงฟรี โดยโรงเรียนดนตรี Blues Dot Music</p>
+
+      <!-- โหมดผู้เยี่ยมชม (ค่าเริ่มต้น): ตั้งชื่อเล่นแล้วเล่นเลย -->
+      <form id="guestForm">
+        <label class="login-label" for="guestNickname">ตั้งชื่อเล่นแล้วเริ่มร้องเลย! 🎤</label>
+        <input id="guestNickname" class="login-input" type="text" maxlength="20"
+               placeholder="เช่น น้องเสียงใส" required />
+        <div id="guestError" class="login-error"></div>
+        <button id="guestSubmit" class="btn-start login-btn" type="submit">🎵 เริ่มเลย!</button>
+      </form>
+      <p class="login-hint">
+        <a href="#" id="showLoginLink">เป็นนักเรียน/ครูของโรงเรียน? เข้าสู่ระบบ</a>
+      </p>
+
+      <!-- โหมด login เดิม (นักเรียนจริง/ครู) -->
+      <form id="loginForm" autocomplete="on" class="hidden">
         <label class="login-label" for="loginUsername">ชื่อผู้ใช้</label>
         <input id="loginUsername" class="login-input" type="text" autocomplete="username"
                autocapitalize="none" spellcheck="false" required />
@@ -28,7 +42,9 @@
         <div id="loginError" class="login-error"></div>
         <button id="loginSubmit" class="btn-start login-btn" type="submit">เข้าสู่ระบบ</button>
       </form>
-      <p class="login-hint">ยังไม่มีบัญชี? ติดต่อคุณครูเพื่อรับชื่อผู้ใช้และรหัสผ่าน</p>
+      <p class="login-hint hidden" id="backToGuestHint">
+        <a href="#" id="showGuestLink">‹ กลับไปเล่นแบบผู้เยี่ยมชม</a>
+      </p>
     </div>
   </div>
 

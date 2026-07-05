@@ -14,12 +14,12 @@ export function verifyPassword(pw, hash) {
   return bcrypt.compare(pw, hash);
 }
 
-export async function signToken(user) {
+export async function signToken(user, expiresIn = '30d') {
   return new SignJWT({ role: user.role, username: user.username })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(String(user.id))
     .setIssuedAt()
-    .setExpirationTime('30d')
+    .setExpirationTime(expiresIn)
     .sign(secret());
 }
 

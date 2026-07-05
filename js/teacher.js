@@ -53,12 +53,19 @@ $('#backToOverview').addEventListener('click', () => {
 });
 
 // ── ภาพรวม ─────────────────────────────────────────────
+let showGuests = true;
+
 async function loadOverview() {
   overview = await api('/api/admin/students');
+  renderOverview();
+}
 
-  $('#studentsTable tbody').innerHTML = overview.students.map(s => `
+function renderOverview() {
+  const students = overview.students.filter(s => showGuests || !s.is_guest);
+
+  $('#studentsTable tbody').innerHTML = students.map(s => `
     <tr class="${s.is_active ? '' : 'inactive-row'}">
-      <td><a href="#" class="student-link" data-id="${s.id}">${s.display_name}</a></td>
+      <td>${s.is_guest ? '🎟 ' : ''}<a href="#" class="student-link" data-id="${s.id}">${s.display_name}</a></td>
       <td>${s.level}</td>
       <td>${s.xp}</td>
       <td>${s.streak_days || 0}</td>
@@ -71,10 +78,12 @@ async function loadOverview() {
   document.querySelectorAll('.student-link').forEach(a =>
     a.addEventListener('click', e => { e.preventDefault(); openStudent(Number(a.dataset.id)); }));
 
-  $('#activityTable tbody').innerHTML = overview.activity.map(a => `
+  $('#activityTable tbody').innerHTML = overview.activity
+    .filter(a => showGuests || !a.is_guest)
+    .map(a => `
     <tr>
       <td>${fmtTime(a.created_at)}</td>
-      <td>${a.display_name}</td>
+      <td>${a.is_guest ? '🎟 ' : ''}${a.display_name}</td>
       <td>${GAME_NAMES[a.game_id] || a.game_id}</td>
       <td>${a.level}</td>
       <td>${a.score}</td>
@@ -170,11 +179,11 @@ async function openStudent(id) {
 function renderManage() {
   $('#manageTable tbody').innerHTML = overview.students.map(s => `
     <tr class="${s.is_active ? '' : 'inactive-row'}">
-      <td>${s.display_name}</td>
+      <td>${s.is_guest ? '🎟 ' : ''}${s.display_name}</td>
       <td>@${s.username}</td>
       <td>${s.is_active ? '✅ ใช้งานได้' : '⛔ ปิดอยู่'}</td>
       <td class="manage-actions">
-        <button class="btn-secondary btn-sm" data-act="reset" data-id="${s.id}" data-name="${s.display_name}">รีเซ็ตรหัส</button>
+        ${s.is_guest ? '' : `<button class="btn-secondary btn-sm" data-act="reset" data-id="${s.id}" data-name="${s.display_name}">รีเซ็ตรหัส</button>`}
         <button class="btn-secondary btn-sm" data-act="toggle" data-id="${s.id}" data-active="${s.is_active}">${s.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button>
       </td>
     </tr>`).join('') || '<tr><td colspan="4">ยังไม่มีนักเรียน</td></tr>';
@@ -204,6 +213,11 @@ function genPassword() {
   for (let i = 0; i < 3; i++) pw += c[Math.floor(Math.random() * c.length)] + v[Math.floor(Math.random() * v.length)];
   return pw + Math.floor(10 + Math.random() * 90);
 }
+
+$('#guestToggle').addEventListener('change', e => {
+  showGuests = e.target.checked;
+  renderOverview();
+});
 
 $('#genPassword').addEventListener('click', () => { $('#newPassword').value = genPassword(); });
 

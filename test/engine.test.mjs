@@ -114,7 +114,47 @@ console.log('\n── 5. SegmentTracker: จับ segment จากสตรี
   }
 }
 
-console.log('\n── 6. utilities ──');
+console.log('\n── 6. TrailingCapture: วัดช่วงเสียง (เคสไล่เสียงขึ้นก่อนค้าง) ──');
+{
+  const { TrailingCapture } = await import('../js/calibrate.js');
+
+  // เคสที่พังบนมือถือ: ไล่เสียงขึ้น 2 วิ (C4→C5) แล้วค้าง C5 — ระบบเก่าคิด stddev รวม glide → ไม่มีวันจับ
+  const cap = new TrailingCapture();
+  let captured = null;
+  for (let t = 0; t <= 2000; t += 20) cap.push(t, 60 + (t / 2000) * 12);          // glide ขึ้น
+  for (let t = 2020; t <= 3600 && !captured; t += 20) {
+    const st = cap.push(t, 72 + 0.15 * Math.sin(t / 60));                          // ค้าง C5 + สั่นเล็กน้อย
+    if (st.captured !== null) captured = st.captured;
+  }
+  check(`glide-แล้วค้าง: จับได้ C5 (ได้ ${captured})`, captured === 72);
+
+  // หายใจสะดุดสั้น (<400ms) ต้องไม่รีเซ็ต
+  const cap2 = new TrailingCapture();
+  let captured2 = null;
+  for (let t = 0; t <= 700; t += 20) cap2.push(t, 65);
+  for (let t = 720; t <= 1000; t += 20) cap2.push(t, null);                        // เงียบ 280ms
+  for (let t = 1020; t <= 2400 && !captured2; t += 20) {
+    const st = cap2.push(t, 65);
+    if (st.captured !== null) captured2 = st.captured;
+  }
+  check(`สะดุด 280ms ไม่รีเซ็ต: จับ F4 ได้ (ได้ ${captured2})`, captured2 === 65);
+
+  // เสียงแกว่งแรง (ยังไล่อยู่) ต้องยังไม่จับ
+  const cap3 = new TrailingCapture();
+  let wrongCapture = false;
+  for (let t = 0; t <= 3000; t += 20) {
+    const st = cap3.push(t, 60 + (t / 3000) * 14);                                 // glide ช้าตลอด ไม่ค้างเลย
+    if (st.captured !== null) wrongCapture = true;
+  }
+  check('glide ตลอดไม่ค้าง: ไม่จับมั่ว', !wrongCapture);
+
+  // ปุ่ม manual: ใช้ median 600ms ล่าสุด
+  const cap4 = new TrailingCapture();
+  for (let t = 0; t <= 800; t += 20) cap4.push(t, 67);
+  check(`manualCapture คืน G4 (ได้ ${cap4.manualCapture(800)})`, cap4.manualCapture(800) === 67);
+}
+
+console.log('\n── 7. utilities ──');
 check('noteToFreq A4 = 440', Math.abs(noteToFreq('A', 4) - 440) < 0.01);
 check('freqToNoteInfo 452Hz = A4 +46.6¢', (() => { const i = freqToNoteInfo(452); return i.note === 'A' && i.octave === 4 && Math.abs(i.cents - 46.6) < 1; })());
 check('foldCents: ร้องต่ำ 1 อ็อกเทฟ = 0¢', foldCents(-1200) === 0);
