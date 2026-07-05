@@ -564,3 +564,87 @@ button {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* ══════════ Login gate ══════════ */
+.auth-locked #app, .auth-locked .bottom-nav { display: none !important; }
+body:not(.auth-locked) .login-view { display: none !important; }
+
+.login-view {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--pad);
+}
+.login-card {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(20px, 4vh, 36px);
+  text-align: center;
+}
+.login-logo { width: 72px; height: 72px; object-fit: contain; border-radius: 50%; }
+.login-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-top: 8px;
+}
+.login-sub { color: var(--text2); font-size: 0.9rem; margin: 4px 0 20px; }
+.login-label {
+  display: block;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text2);
+  margin: 12px 0 4px;
+}
+.login-input {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+}
+.login-input:focus { border-color: var(--accent2); }
+.login-error { color: var(--red); font-size: 0.85rem; min-height: 1.4em; margin-top: 10px; }
+.login-btn { width: 100%; margin-top: 6px; }
+.login-hint { color: var(--text2); font-size: 0.8rem; margin-top: 18px; }
+
+/* ══════════ Header user ══════════ */
+.header { position: relative; }
+.header-user {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-user-name {
+  font-size: 0.78rem;
+  color: var(--text2);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logout-btn {
+  font-family: inherit;
+  font-size: 0.72rem;
+  color: var(--text2);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+}

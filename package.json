@@ -1,0 +1,13 @@
+{
+  "name": "lets-sing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/engine.test.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6"
+  }
+}

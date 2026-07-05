@@ -4,7 +4,7 @@
     {
       "name": "vocal-training",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "3456", "."],
+      "runtimeArgs": ["vercel", "dev", "--listen", "3456"],
       "port": 3456
     }
   ]

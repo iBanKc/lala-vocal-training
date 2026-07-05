@@ -9,7 +9,29 @@
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="auth-locked">
+
+  <!-- ═══════════════════════════════════════════════
+       LOGIN (แสดงเมื่อยังไม่เข้าสู่ระบบ)
+  ═══════════════════════════════════════════════ -->
+  <div id="viewLogin" class="login-view">
+    <div class="login-card">
+      <img src="assets/logo.PNG" alt="Blues Dot Music" class="login-logo" />
+      <h1 class="login-title">Let's Sing</h1>
+      <p class="login-sub">เกมฝึกร้องเพลง สำหรับนักเรียน Blues Dot Music</p>
+      <form id="loginForm" autocomplete="on">
+        <label class="login-label" for="loginUsername">ชื่อผู้ใช้</label>
+        <input id="loginUsername" class="login-input" type="text" autocomplete="username"
+               autocapitalize="none" spellcheck="false" required />
+        <label class="login-label" for="loginPassword">รหัสผ่าน</label>
+        <input id="loginPassword" class="login-input" type="password" autocomplete="current-password" required />
+        <div id="loginError" class="login-error"></div>
+        <button id="loginSubmit" class="btn-start login-btn" type="submit">เข้าสู่ระบบ</button>
+      </form>
+      <p class="login-hint">ยังไม่มีบัญชี? ติดต่อคุณครูเพื่อรับชื่อผู้ใช้และรหัสผ่าน</p>
+    </div>
+  </div>
+
   <div id="app">
 
     <!-- Header -->
@@ -20,6 +42,10 @@
       <div class="header-center">
         <div class="logo">Let's Sing</div>
         <p class="tagline" id="headerTagline">วัดเสียงร้องตรงโน้ต</p>
+      </div>
+      <div class="header-user">
+        <span id="headerUserName" class="header-user-name"></span>
+        <button id="logoutBtn" class="logout-btn" title="ออกจากระบบ">ออก</button>
       </div>
     </header>
 
@@ -219,6 +245,7 @@
     </button>
   </nav>
 
+  <script type="module" src="js/auth.js"></script>
   <script type="module" src="app.js"></script>
   <script type="module" src="compare.js"></script>
 </body>
