@@ -1,60 +1,12 @@
-// ── Compare Mode ───────────────────────────────────────
-const NOTE_NAMES_C = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+// ── Compare Mode — ใช้ Pitch Engine v2 ร่วมกับทั้งแอป ───
+import {
+  NOTE_NAMES, freqToMidi, freqToNoteInfo, analyseBuffer, decodeAndAnalyse,
+  detectFreq, PitchTracker,
+} from './js/pitch-engine.js';
 
 function freqToNote(freq) {
-  if (!freq || freq <= 0) return null;
-  const midi = Math.round(69 + 12 * Math.log2(freq / 440));
-  return NOTE_NAMES_C[((midi % 12) + 12) % 12];
-}
-function freqToMidi(freq) {
-  if (!freq || freq <= 0) return null;
-  return 69 + 12 * Math.log2(freq / 440);
-}
-function detectPitchC(buffer, sampleRate) {
-  const halfBuf = Math.floor(buffer.length / 2);
-  const yinBuf  = new Float32Array(halfBuf);
-  for (let tau = 0; tau < halfBuf; tau++)
-    for (let i = 0; i < halfBuf; i++) { const d = buffer[i] - buffer[i+tau]; yinBuf[tau] += d*d; }
-  yinBuf[0] = 1; let rs = 0;
-  for (let tau = 1; tau < halfBuf; tau++) { rs += yinBuf[tau]; yinBuf[tau] *= tau / rs; }
-  for (let tau = 2; tau < halfBuf; tau++) {
-    if (yinBuf[tau] < 0.15) {
-      while (tau+1 < halfBuf && yinBuf[tau+1] < yinBuf[tau]) tau++;
-      const p = yinBuf[tau-1]??yinBuf[tau], c = yinBuf[tau], n = yinBuf[tau+1]??yinBuf[tau];
-      const d2 = 2*(2*c-p-n);
-      return sampleRate / (d2 !== 0 ? tau+(p-n)/d2 : tau);
-    }
-  }
-  return -1;
-}
-
-function analyseBuffer(audioBuffer, hopSec = 0.05) {
-  const sr = audioBuffer.sampleRate, frameSize = 2048, hopSize = Math.round(hopSec * sr);
-  const ch = audioBuffer.getChannelData(0), frames = [], buf = new Float32Array(frameSize);
-  for (let start = 0; start + frameSize < ch.length; start += hopSize) {
-    buf.set(ch.subarray(start, start + frameSize));
-    let rms = 0;
-    for (let i = 0; i < frameSize; i++) rms += buf[i]*buf[i];
-    rms = Math.sqrt(rms / frameSize);
-    const time = start / sr;
-    if (rms < 0.005) { frames.push({ time, freq:0, midi:null, note:null, rms }); continue; }
-    const freq = detectPitchC(buf, sr), valid = freq >= 50 && freq <= 2000;
-    frames.push({ time, freq: valid?freq:0, midi: valid?freqToMidi(freq):null, note: valid?freqToNote(freq):null, rms });
-  }
-  return frames;
-}
-
-async function decodeAndAnalyse(arrayBuf) {
-  // Decode then resample to 22050 Hz for faster analysis
-  const tmpCtx   = new (window.AudioContext || window.webkitAudioContext)();
-  const decoded  = await tmpCtx.decodeAudioData(arrayBuf.slice(0));
-  tmpCtx.close();
-  const targetSr = 22050;
-  const offCtx   = new OfflineAudioContext(1, Math.ceil(decoded.duration * targetSr), targetSr);
-  const src      = offCtx.createBufferSource();
-  src.buffer     = decoded; src.connect(offCtx.destination); src.start(0);
-  const resampled = await offCtx.startRendering();
-  return analyseBuffer(resampled, 0.05);
+  const info = freqToNoteInfo(freq);
+  return info ? info.note : null;
 }
 
 // ── State ──────────────────────────────────────────────
@@ -187,8 +139,9 @@ async function startCompareRecording() {
 
     const source = cmpAudioCtx.createMediaStreamSource(cmpStream);
     cmpAnalyser  = cmpAudioCtx.createAnalyser();
-    cmpAnalyser.fftSize = 2048; cmpAnalyser.smoothingTimeConstant = 0.4;
+    cmpAnalyser.fftSize = 4096;
     source.connect(cmpAnalyser);
+    liveTracker.reset();
 
     recordedChunks = [];
     const mime = getSupportedMime();
@@ -253,8 +206,9 @@ function stopCompareRecording() {
   mediaRecorder.stop();
 }
 
-// ── Live pitch display ─────────────────────────────────
-const liveBuf = new Float32Array(2048);
+// ── Live pitch display (engine v2: detectFreq + tracker) ──
+const liveBuf = new Float32Array(4096);
+const liveTracker = new PitchTracker();
 function liveLoop() {
   if (!isRecording) return;
   cmpAnimFrame = requestAnimationFrame(liveLoop);
@@ -267,14 +221,14 @@ function liveLoop() {
     cmpCurrentNote.textContent = '—'; cmpNoteOctave.textContent = '';
     cmpFreqDisplay.textContent = 'ไม่ได้ยินเสียง...'; cmpMeterBar.style.left = '50%'; return;
   }
-  const freq = detectPitchC(liveBuf, cmpAudioCtx.sampleRate);
-  if (freq < 50 || freq > 2000) return;
-  const midi = freqToMidi(freq), note = freqToNote(freq);
-  const octave = Math.floor(Math.round(midi) / 12) - 1;
-  cmpCurrentNote.textContent = note || '—';
-  cmpNoteOctave.textContent  = note ? `Octave ${octave}` : '';
-  cmpFreqDisplay.textContent = `${freq.toFixed(1)} Hz`;
-  const cents = (midi - Math.round(midi)) * 100;
+  const { freq: rawFreq, clarity } = detectFreq(liveBuf, cmpAudioCtx.sampleRate);
+  const p = liveTracker.push(rawFreq, clarity, performance.now());
+  if (!p) return;
+  const info = freqToNoteInfo(p.freq);
+  cmpCurrentNote.textContent = info.note;
+  cmpNoteOctave.textContent  = `Octave ${info.octave}`;
+  cmpFreqDisplay.textContent = `${p.freq.toFixed(1)} Hz`;
+  const cents = info.cents;
   const pct   = 50 + (cents / 50) * 45;
   cmpMeterBar.style.left = Math.max(5, Math.min(95, pct)) + '%';
   cmpMeterBar.style.background = Math.abs(cents) < 10 ? '#16a34a' : Math.abs(cents) < 25 ? '#ca8a04' : '#dc2626';
@@ -318,7 +272,7 @@ function buildUserOnlyReport() {
     const cents = Math.abs((f.midi - Math.round(f.midi)) * 100);
     if (cents < 20) inTune++;
     else if (cents < 40) slightOff++;
-    else { off++; const ref = NOTE_NAMES_C[((Math.round(f.midi)%12)+12)%12]; mismatches.push({ time: f.time, refNote: ref, refMidi: Math.round(f.midi), userNote: f.note, userMidi: f.midi, centDiff: Math.round(cents) }); }
+    else { off++; const ref = NOTE_NAMES[((Math.round(f.midi)%12)+12)%12]; mismatches.push({ time: f.time, refNote: ref, refMidi: Math.round(f.midi), userNote: f.note, userMidi: f.midi, centDiff: Math.round(cents) }); }
   });
   const score = total > 0 ? Math.round((inTune / total) * 100) : 0;
   renderReport(score, inTune, slightOff, off, mismatches);

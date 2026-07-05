@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pitch Engine v2 — Accuracy Harness (dev only)</title>
+  <style>
+    body { font-family: -apple-system, Sarabun, sans-serif; margin: 20px; background: #f0f6ff; }
+    h1 { font-size: 1.2rem; }
+    #summary { font-size: 1.4rem; font-weight: 700; padding: 12px; border-radius: 8px; }
+    #summary.pass { background: #dcfce7; color: #166534; }
+    #summary.fail { background: #fee2e2; color: #991b1b; }
+    table { border-collapse: collapse; width: 100%; background: #fff; font-size: 0.85rem; }
+    td, th { border: 1px solid #dbeafe; padding: 4px 8px; text-align: left; }
+    tr.ok td:first-child { color: #16a34a; }
+    tr.bad td:first-child { color: #dc2626; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Pitch Engine v2 — Accuracy Harness (เกณฑ์ ±3¢)</h1>
+  <div id="summary">กำลังทดสอบ...</div>
+  <table id="results"><tr><th></th><th>เคส</th><th>ผล</th></tr></table>
+
+  <script type="module">
+    import { detectFreq, analyseBuffer, segmentStats, PitchTracker } from '../js/pitch-engine.js';
+
+    const rows = document.getElementById('results');
+    const summary = document.getElementById('summary');
+    let pass = 0, fail = 0;
+
+    function report(name, ok, detail = '') {
+      ok ? pass++ : fail++;
+      const tr = document.createElement('tr');
+      tr.className = ok ? 'ok' : 'bad';
+      tr.innerHTML = `<td>${ok ? '✅' : '❌'}</td><td>${name}</td><td>${detail}</td>`;
+      rows.appendChild(tr);
+    }
+
+    const SR = 48000, N = 4096;
+    function synth(freq, kind, n = N, sr = SR) {
+      const buf = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        const ph = 2 * Math.PI * freq * i / sr;
+        if (kind === 'sine') buf[i] = Math.sin(ph);
+        else if (kind === 'harmonics') buf[i] = Math.sin(ph) + 0.5 * Math.sin(2 * ph) + 0.33 * Math.sin(3 * ph) + 0.25 * Math.sin(4 * ph);
+        else buf[i] = 0.4 * Math.sin(ph) + 1.0 * Math.sin(2 * ph) + 0.9 * Math.sin(3 * ph) + 0.3 * Math.sin(4 * ph) + 0.15 * Math.sin(5 * ph);
+      }
+      return buf;
+    }
+
+    // 1. ความแม่นยำ detector (เหมือน Node test — ยืนยันบนเบราว์เซอร์จริง)
+    for (const base of [110, 220, 440]) {
+      for (const det of [0, 15, -30, 70]) {
+        for (const kind of ['sine', 'harmonics', 'vowel']) {
+          const f = base * Math.pow(2, det / 1200);
+          const { freq, clarity } = detectFreq(synth(f, kind), SR);
+          const err = 1200 * Math.log2(freq / f);
+          report(`detector: ${kind} ${base}Hz ${det >= 0 ? '+' : ''}${det}¢`,
+            Math.abs(err) <= 3 && clarity >= 0.85, `err ${err.toFixed(2)}¢ clarity ${clarity.toFixed(2)}`);
+        }
+      }
+    }
+
+    // 2. analyseBuffer (offline pipeline): สร้าง AudioBuffer จริง — เงียบ 0.5s → A3 1s → เงียบ 0.3s → C4+30¢ 1s
+    async function testAnalyseBuffer() {
+      const sr = 22050;
+      const dur = 2.8;
+      const off = new OfflineAudioContext(1, Math.ceil(dur * sr), sr);
+      const buf = off.createBuffer(1, Math.ceil(dur * sr), sr);
+      const ch = buf.getChannelData(0);
+      const a3 = 220, c4d = 261.63 * Math.pow(2, 30 / 1200);
+      for (let i = 0; i < ch.length; i++) {
+        const t = i / sr;
+        if (t >= 0.5 && t < 1.5) ch[i] = 0.5 * (Math.sin(2 * Math.PI * a3 * t) + 0.4 * Math.sin(4 * Math.PI * a3 * t));
+        else if (t >= 1.8 && t < 2.8) ch[i] = 0.5 * (Math.sin(2 * Math.PI * c4d * t) + 0.4 * Math.sin(4 * Math.PI * c4d * t));
+      }
+      const frames = analyseBuffer(buf, 0.05);
+
+      const silent = frames.filter(f => f.time < 0.4);
+      report('analyseBuffer: ช่วงเงียบไม่มี pitch', silent.every(f => f.midi === null), `${silent.length} เฟรม`);
+
+      const seg1 = frames.filter(f => f.time > 0.7 && f.time < 1.4 && f.midi !== null);
+      const med1 = seg1.map(f => f.midi).sort((a, b) => a - b)[seg1.length >> 1];
+      report('analyseBuffer: A3 → midi 57', seg1.length > 8 && Math.abs(med1 - 57) < 0.05, `median ${med1?.toFixed(3)}`);
+
+      const seg2 = frames.filter(f => f.time > 2.0 && f.time < 2.7 && f.midi !== null);
+      const med2 = seg2.map(f => f.midi).sort((a, b) => a - b)[seg2.length >> 1];
+      report('analyseBuffer: C4+30¢ → midi 60.30', seg2.length > 8 && Math.abs(med2 - 60.30) < 0.05, `median ${med2?.toFixed(3)}`);
+
+      // segment scoring จากเฟรมจริง
+      const st = segmentStats(seg2.map(f => ({ time: f.time * 1000, midi: f.midi })), 60);
+      report('segment scoring: C4+30¢ vs C4 → score ~60', Math.abs(st.score - 60) <= 4, `score ${st.score.toFixed(1)} centsOff ${st.centsOff.toFixed(1)}`);
+    }
+
+    await testAnalyseBuffer();
+
+    summary.textContent = `ผล: ${pass} ผ่าน, ${fail} ไม่ผ่าน`;
+    summary.className = fail ? 'fail' : 'pass';
+    window.__testResult = { pass, fail };
+  </script>
+</body>
+</html>
