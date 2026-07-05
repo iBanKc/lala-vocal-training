@@ -16,6 +16,8 @@ function showLogin() {
 function showApp() {
   document.body.classList.remove('auth-locked');
   if (userNameEl) userNameEl.textContent = state.user.display_name;
+  const tLink = document.getElementById('teacherLink');
+  if (tLink) tLink.classList.toggle('hidden', state.user.role !== 'teacher');
   window.dispatchEvent(new CustomEvent('auth:ready', { detail: state.user }));
 }
 

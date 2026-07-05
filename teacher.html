@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Let's Sing — ห้องครู</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body class="teacher-body">
+
+  <div class="teacher-shell">
+    <header class="header">
+      <a href="/" class="brand-logo"><img src="assets/logo.PNG" alt="Blues Dot Music" class="brand-img" /></a>
+      <div class="header-center">
+        <div class="logo">ห้องครู</div>
+        <p class="tagline">Let's Sing · Blues Dot Music</p>
+      </div>
+      <div class="header-user">
+        <span id="teacherName" class="header-user-name"></span>
+        <a href="/" class="logout-btn">← กลับแอป</a>
+      </div>
+    </header>
+
+    <div id="teacherGate" class="teacher-gate hidden">
+      <p>⚠️ หน้านี้สำหรับครูเท่านั้น — กรุณา<a href="/">เข้าสู่ระบบ</a>ด้วยบัญชีครูก่อน</p>
+    </div>
+
+    <div id="teacherMain" class="hidden">
+      <nav class="teacher-tabs">
+        <button class="teacher-tab active" data-view="overview">📊 ภาพรวมห้อง</button>
+        <button class="teacher-tab" data-view="activity">🕒 กิจกรรมล่าสุด</button>
+        <button class="teacher-tab" data-view="manage">👥 จัดการนักเรียน</button>
+      </nav>
+
+      <!-- ภาพรวมห้องเรียน -->
+      <section id="viewOverview" class="teacher-view active">
+        <div class="table-wrap">
+          <table class="t-table" id="studentsTable">
+            <thead><tr>
+              <th>นักเรียน</th><th>ระดับ</th><th>XP</th><th>🔥</th>
+              <th>รอบ 7 วัน</th><th>แม่นยำ 7 วัน</th><th>เพี้ยนเฉลี่ย</th><th>ใช้งานล่าสุด</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="note-text">แตะชื่อนักเรียนเพื่อดูรายละเอียด · <span class="dot green"></span> ≥80% <span class="dot yellow"></span> 60–80% <span class="dot red"></span> &lt;60%</p>
+      </section>
+
+      <!-- รายคน -->
+      <section id="viewStudent" class="teacher-view">
+        <button class="btn-back" id="backToOverview">‹ กลับภาพรวม</button>
+        <div id="studentDetail"></div>
+      </section>
+
+      <!-- กิจกรรมล่าสุด -->
+      <section id="viewActivity" class="teacher-view">
+        <div class="table-wrap">
+          <table class="t-table" id="activityTable">
+            <thead><tr><th>เวลา</th><th>นักเรียน</th><th>เกม</th><th>ด่าน</th><th>คะแนน</th><th>ดาว</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- จัดการนักเรียน -->
+      <section id="viewManage" class="teacher-view">
+        <div class="manage-card">
+          <h3>➕ เพิ่มนักเรียนใหม่</h3>
+          <div class="manage-form">
+            <input id="newUsername" class="login-input" placeholder="ชื่อผู้ใช้ (a-z, 0-9)" autocapitalize="none" spellcheck="false" />
+            <input id="newDisplayName" class="login-input" placeholder="ชื่อที่แสดง เช่น น้องมายด์" />
+            <div class="pw-row">
+              <input id="newPassword" class="login-input" placeholder="รหัสผ่าน" />
+              <button class="btn-secondary" id="genPassword">🎲 สุ่ม</button>
+            </div>
+            <button class="btn-start" id="createStudent">สร้างบัญชี</button>
+            <div id="createMsg" class="login-error"></div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="t-table" id="manageTable">
+            <thead><tr><th>นักเรียน</th><th>ชื่อผู้ใช้</th><th>สถานะ</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="js/teacher.js"></script>
+</body>
+</html>

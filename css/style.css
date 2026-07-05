@@ -916,3 +916,69 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .pg-hud { display: flex; justify-content: space-between; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
 .pg-canvas-wrap { flex: 1; min-height: 220px; }
 .pg-canvas { width: 100%; height: 100%; border-radius: var(--radius-sm); }
+
+/* ══════════ Teacher dashboard ══════════ */
+.teacher-body { overflow: auto; height: auto; display: block; }
+.teacher-shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+.teacher-gate { text-align: center; padding: 40px 16px; color: var(--text2); }
+.teacher-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.teacher-tab {
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+}
+.teacher-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.teacher-view { display: none; flex-direction: column; gap: var(--gap); margin-top: 8px; }
+.teacher-view.active { display: flex; }
+
+.table-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+.t-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.t-table th {
+  text-align: left; padding: 10px 12px;
+  color: var(--text2); font-weight: 600;
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+.t-table td { padding: 9px 12px; border-bottom: 1px solid rgba(33,150,243,0.08); white-space: nowrap; }
+.t-table tr:last-child td { border-bottom: none; }
+.student-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+.inactive-row { opacity: 0.45; }
+.acc-green { color: var(--green); font-weight: 700; }
+.acc-yellow { color: var(--yellow); font-weight: 700; }
+.acc-red { color: var(--red); font-weight: 700; }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; }
+.dot.green { background: var(--green); } .dot.yellow { background: var(--yellow); } .dot.red { background: var(--red); }
+
+.manage-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--pad);
+}
+.manage-card h3 { font-size: 0.95rem; margin-bottom: 10px; }
+.manage-form { display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
+.pw-row { display: flex; gap: 8px; }
+.pw-row .login-input { flex: 1; }
+.btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: var(--radius-sm); }
+.manage-actions { display: flex; gap: 6px; }
+.prog-grid { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+.prog-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); }
