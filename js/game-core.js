@@ -60,6 +60,12 @@ export async function openGame(gameId) {
 
   if (!game.noCalibration && !(await ensureCalibrated())) return; // ต้องรู้ช่วงเสียงก่อน
 
+  // เกมด่านเดียว (เช่น ร้องเพลงเต็ม): เข้าเล่นทันที ไม่ผ่านหน้าเลือกด่าน
+  if (game.maxLevel === 1) {
+    startRound(gameId, 1);
+    return;
+  }
+
   showPage('pageGame');
   const maxPlayable = unlockedLevel(gameId, game.maxLevel);
   const bookList = BOOK_EXERCISES[gameId] || [];
@@ -133,7 +139,9 @@ export async function startRound(gameId, level) {
     <div id="gameStage" class="game-stage"></div>`;
   gameRoot().querySelector('#gameBack').addEventListener('click', () => {
     abort.abort();
-    openGame(gameId);
+    // เกมด่านเดียวไม่มีหน้าเลือกด่าน — ออกแล้วกลับหน้าหลักเลย (กันวนกลับเข้าเกม)
+    if (game.maxLevel === 1) showPage('pageHub');
+    else openGame(gameId);
   });
 
   const stage = gameRoot().querySelector('#gameStage');

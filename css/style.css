@@ -1314,3 +1314,43 @@ html { font-size: 17px; }
   line-height: 1.4;
   text-shadow: 0 2px 12px rgba(0,0,0,0.4);
 }
+
+/* ══════════ ร้องเพลงเต็ม: โหมด YouTube + เนื้อเพลงคาราโอเกะ ══════════ */
+.sc-video-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: #000;
+  margin-top: 10px;
+}
+.sc-video-wrap iframe { width: 100%; height: 100%; display: block; }
+.sc-lyrics-in { margin-top: 10px; resize: vertical; font-size: 0.92rem; }
+.sc-video-slot { flex-shrink: 0; }
+.sc-lyrics { text-align: center; min-height: 3.4em; }
+.sc-lyric-line {
+  font-size: 1.05rem;
+  color: var(--text2);
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+.sc-lyric-line.current {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.sc-lyrics-plain {
+  max-height: 110px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: pre-wrap;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.6;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.sc-setup, .sc-play { display: flex; flex-direction: column; gap: var(--gap); }

@@ -251,5 +251,22 @@ check('foldCents: ร้องต่ำ 1 อ็อกเทฟ = 0¢', foldCent
 check('foldCents: -1230¢ → -30¢', Math.abs(foldCents(-1230) - (-30)) < 0.01);
 check('scoreFromCents ขอบเขต', scoreFromCents(0) === 100 && scoreFromCents(10) === 100 && scoreFromCents(60) === 0 && Math.abs(scoreFromCents(35) - 50) < 0.01);
 
+console.log('\n── 11. ร้องเพลงเต็ม: parseYoutubeId / parseLrc ──');
+{
+  const { parseYoutubeId, parseLrc } = await import('../js/games/song-compare.js');
+
+  check('watch?v=', parseYoutubeId('https://www.youtube.com/watch?v=dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
+  check('youtu.be + query', parseYoutubeId('https://youtu.be/dQw4w9WgXcQ?si=abc123') === 'dQw4w9WgXcQ');
+  check('shorts', parseYoutubeId('https://youtube.com/shorts/dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
+  check('embed', parseYoutubeId('https://www.youtube.com/embed/dQw4w9WgXcQ') === 'dQw4w9WgXcQ');
+  check('URL ขยะ → null', parseYoutubeId('https://example.com/watch?v=abc') === null && parseYoutubeId('ไม่ใช่ลิงก์') === null && parseYoutubeId('') === null);
+
+  const lrc = parseLrc('[00:12.34]บรรทัดแรก\n[00:05]มาก่อน\nไม่มีเวลา\n[01:02.5]บรรทัดสาม');
+  check('LRC: ได้ 3 บรรทัด เรียงเวลา', lrc.length === 3 && lrc[0].line === 'มาก่อน' && Math.abs(lrc[0].t - 5) < 0.01 && Math.abs(lrc[1].t - 12.34) < 0.01 && Math.abs(lrc[2].t - 62.5) < 0.01);
+  const multi = parseLrc('[00:10][00:40]ท่อนซ้ำ');
+  check('LRC: หลาย timestamp ต่อบรรทัด', multi.length === 2 && multi[0].t === 10 && multi[1].t === 40);
+  check('ข้อความธรรมดา → null', parseLrc('เนื้อเพลงเฉย ๆ\nไม่มีเวลา') === null && parseLrc('') === null);
+}
+
 console.log(`\n═══ ผล: ${pass} ผ่าน, ${fail} ไม่ผ่าน ═══`);
 process.exit(fail ? 1 : 0);
