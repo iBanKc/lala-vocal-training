@@ -69,7 +69,7 @@ body {
   flex-shrink: 0;
   padding: clamp(8px, 1.5vh, 20px) 0 clamp(4px, 0.8vh, 10px);
 }
-.header-center { text-align: left; }
+.header-center { text-align: left; min-width: 0; }
 .header-side { display: flex; align-items: center; gap: 8px; }
 .logo {
   font-size: clamp(1.3rem, 3.5vh, 2rem);
@@ -79,7 +79,8 @@ body {
 }
 .tagline {
   color: var(--text2);
-  font-size: clamp(0.72rem, 1.5vh, 0.95rem);
+  font-size: clamp(0.85rem, 1.6vh, 1rem);
+  line-height: 1.35;
   margin-top: 2px;
 }
 .brand-logo {
@@ -100,7 +101,7 @@ body {
   border: 1px solid #fca5a5;
   border-radius: var(--radius-sm);
   color: #991b1b;
-  font-size: clamp(0.75rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
   padding: 8px 14px;
   text-align: center;
   line-height: 1.4;
@@ -143,7 +144,7 @@ section {
   min-height: 0;
 }
 .freq-display {
-  font-size: clamp(0.75rem, 1.6vh, 0.9rem);
+  font-size: clamp(0.82rem, 1.6vh, 0.9rem);
   color: rgba(255,255,255,0.7);
   margin-top: 6px;
 }
@@ -153,7 +154,7 @@ section {
   flex: 0 0 auto;
 }
 .meter-label {
-  font-size: clamp(0.7rem, 1.4vh, 0.85rem);
+  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
   color: var(--text2);
   text-align: center;
   margin-bottom: 8px;
@@ -191,7 +192,7 @@ section {
 .meter-hints {
   display: flex;
   justify-content: space-between;
-  font-size: clamp(0.65rem, 1.3vh, 0.75rem);
+  font-size: clamp(0.75rem, 1.4vh, 0.85rem);
   color: var(--text2);
   margin-top: 5px;
 }
@@ -222,7 +223,7 @@ section {
   flex: 0 0 auto;
 }
 .target-label {
-  font-size: clamp(0.7rem, 1.4vh, 0.85rem);
+  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
   color: var(--text2);
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -244,7 +245,7 @@ section {
   border-radius: var(--radius-sm);
   color: var(--text2);
   font-family: inherit;
-  font-size: clamp(0.75rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -258,7 +259,7 @@ section {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: clamp(0.75rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
   color: var(--text2);
 }
 .octave-select-wrap select {
@@ -268,7 +269,7 @@ section {
   color: var(--text);
   padding: 6px 10px;
   font-family: inherit;
-  font-size: clamp(0.75rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
   cursor: pointer;
 }
 
@@ -285,7 +286,7 @@ button {
   border: none;
   border-radius: var(--radius-sm);
   padding: clamp(10px, 1.8vh, 14px) clamp(12px, 2vw, 20px);
-  font-size: clamp(0.85rem, 1.7vh, 1rem);
+  font-size: clamp(0.95rem, 1.8vh, 1.05rem);
   transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -311,7 +312,7 @@ button {
   flex: 0 0 auto;
 }
 .score-title {
-  font-size: clamp(0.7rem, 1.4vh, 0.85rem);
+  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
   color: var(--text2);
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -333,7 +334,7 @@ button {
 .footer {
   text-align: center;
   color: var(--text2);
-  font-size: clamp(0.65rem, 1.2vh, 0.8rem);
+  font-size: clamp(0.75rem, 1.3vh, 0.85rem);
   padding: 4px 0 2px;
   flex-shrink: 0;
 }
@@ -361,7 +362,7 @@ button {
   border: none;
   color: var(--text2);
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 0.15s;
@@ -375,7 +376,7 @@ button {
 
 /* ── Section title (compare) ───────────────────── */
 .section-title {
-  font-size: clamp(0.7rem, 1.4vh, 0.85rem);
+  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
   font-weight: 700;
   color: var(--text2);
   text-transform: uppercase;
@@ -400,7 +401,7 @@ button {
   border-radius: var(--radius-sm);
   color: var(--text2);
   font-family: inherit;
-  font-size: clamp(0.78rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.85rem, 1.5vh, 0.9rem);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
@@ -422,7 +423,7 @@ button {
 .ref-track-info { display: flex; align-items: center; gap: 10px; }
 .ref-track-icon { font-size: clamp(1.3rem, 3vh, 2rem); }
 .ref-track-name { font-weight: 700; font-size: clamp(0.85rem, 1.7vh, 1rem); color: var(--text); }
-.ref-track-artist { font-size: clamp(0.72rem, 1.4vh, 0.85rem); color: var(--text2); margin-top: 1px; }
+.ref-track-artist { font-size: clamp(0.8rem, 1.4vh, 0.85rem); color: var(--text2); margin-top: 1px; }
 .ref-audio-player {
   width: 100%;
   height: 36px;
@@ -442,18 +443,18 @@ button {
   cursor: pointer;
   text-align: center;
   color: var(--text2);
-  font-size: clamp(0.78rem, 1.5vh, 0.9rem);
+  font-size: clamp(0.85rem, 1.5vh, 0.9rem);
   font-weight: 600;
   transition: border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 .upload-label:hover { border-color: var(--accent2); background: #dbeafe; }
 
-.status-msg { font-size: clamp(0.72rem, 1.4vh, 0.85rem); color: var(--text2); text-align: center; margin-top: 4px; }
+.status-msg { font-size: clamp(0.8rem, 1.4vh, 0.85rem); color: var(--text2); text-align: center; margin-top: 4px; }
 .status-msg.success { color: var(--green); font-weight: 600; }
 .status-msg.error   { color: var(--red); }
 
-.note-text { font-size: clamp(0.72rem, 1.4vh, 0.85rem); color: var(--text2); line-height: 1.5; }
+.note-text { font-size: clamp(0.8rem, 1.4vh, 0.85rem); color: var(--text2); line-height: 1.5; }
 
 /* ── Report ────────────────────────────────────── */
 .report-section {
@@ -469,10 +470,10 @@ button {
   margin-bottom: 12px;
 }
 .report-score-box { text-align: center; min-width: 72px; }
-.report-score-label { font-size: clamp(0.65rem, 1.3vh, 0.75rem); color: var(--text2); text-transform: uppercase; font-weight: 600; }
+.report-score-label { font-size: clamp(0.75rem, 1.4vh, 0.85rem); color: var(--text2); text-transform: uppercase; font-weight: 600; }
 .report-score-val { font-size: clamp(1.8rem, 6vh, 2.5rem); font-weight: 700; color: var(--accent); }
 .report-stats { flex: 1; display: flex; flex-direction: column; gap: 5px; }
-.stat-item { display: flex; justify-content: space-between; font-size: clamp(0.78rem, 1.5vh, 0.85rem); }
+.stat-item { display: flex; justify-content: space-between; font-size: clamp(0.85rem, 1.5vh, 0.85rem); }
 .stat-label { color: var(--text2); }
 .stat-val { font-weight: 700; }
 .stat-val.green  { color: var(--green); }
@@ -493,8 +494,8 @@ button {
 .mismatch-item.low  { border-left-color: var(--yellow); background: #fefce8; }
 .mismatch-item.med  { border-left-color: #f97316; background: #fff7ed; }
 .mismatch-item.high { border-left-color: var(--red); background: #fef2f2; }
-.mismatch-time { font-size: clamp(0.7rem, 1.4vh, 0.8rem); font-weight: 700; color: var(--text2); margin-bottom: 3px; }
-.mismatch-detail { display: flex; flex-wrap: wrap; gap: 6px; font-size: clamp(0.75rem, 1.5vh, 0.85rem); }
+.mismatch-time { font-size: clamp(0.78rem, 1.4vh, 0.8rem); font-weight: 700; color: var(--text2); margin-bottom: 3px; }
+.mismatch-detail { display: flex; flex-wrap: wrap; gap: 6px; font-size: clamp(0.82rem, 1.5vh, 0.85rem); }
 .mismatch-ref   { color: var(--accent); }
 .mismatch-user  { color: var(--text); }
 .mismatch-cents { font-weight: 700; }
@@ -592,11 +593,11 @@ body:not(.auth-locked) .login-view { display: none !important; }
   color: var(--accent);
   margin-top: 8px;
 }
-.login-sub { color: var(--text2); font-size: 0.9rem; margin: 4px 0 20px; }
+.login-sub { color: var(--text2); font-size: 0.95rem; margin: 4px 0 20px; }
 .login-label {
   display: block;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text2);
   margin: 12px 0 4px;
@@ -615,20 +616,20 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .login-input:focus { border-color: var(--accent2); }
 .login-error { color: var(--red); font-size: 0.85rem; min-height: 1.4em; margin-top: 10px; }
 .login-btn { width: 100%; margin-top: 6px; }
-.login-hint { color: var(--text2); font-size: 0.8rem; margin-top: 18px; }
+.login-hint { color: var(--text2); font-size: 0.88rem; margin-top: 18px; }
 
 /* ══════════ Header user (teacher.html) ══════════ */
 .header-user-name {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: var(--text2);
-  max-width: 90px;
+  max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .logout-btn {
   font-family: inherit;
-  font-size: 0.72rem;
+  font-size: 0.84rem;
   color: var(--text2);
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -654,8 +655,8 @@ body:not(.auth-locked) .login-view { display: none !important; }
   align-items: center;
   margin-top: 6px;
 }
-.hub-level { color: var(--accent); font-weight: 700; font-size: 0.92rem; }
-.hub-streak { font-weight: 700; font-size: 0.92rem; color: #ea580c; }
+.hub-level { color: var(--accent); font-weight: 700; font-size: 1rem; }
+.hub-streak { font-weight: 700; font-size: 1rem; color: #ea580c; }
 .xp-bar {
   height: 12px;
   background: var(--bg3);
@@ -669,11 +670,11 @@ body:not(.auth-locked) .login-view { display: none !important; }
   border-radius: 6px;
   transition: width 0.6s ease;
 }
-.xp-text { font-size: 0.75rem; color: var(--text2); margin-top: 4px; text-align: right; }
+.xp-text { font-size: 0.85rem; color: var(--text2); margin-top: 4px; text-align: right; }
 .hub-range-btn {
   margin-top: 10px;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--accent);
   background: var(--bg3);
   border: 1px solid var(--border);
@@ -706,8 +707,8 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .game-card:not(.coming-soon):hover { border-color: var(--accent2); }
 .game-card-icon { font-size: 1.7rem; }
 .game-card-title { font-weight: 700; color: var(--text); font-size: 0.95rem; }
-.game-card-desc { font-size: 0.74rem; color: var(--text2); }
-.game-card-meta { font-size: 0.72rem; color: var(--accent); margin-top: 4px; font-weight: 600; }
+.game-card-desc { font-size: 0.85rem; color: var(--text2); }
+.game-card-meta { font-size: 0.8rem; color: var(--accent); margin-top: 4px; font-weight: 600; }
 .game-card.coming-soon { opacity: 0.55; cursor: default; }
 
 .badge-shelf {
@@ -730,7 +731,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   opacity: 0.45;
 }
 .badge-chip.earned { filter: none; opacity: 1; border-color: rgba(202,138,4,0.5); }
-.badge-chip small { font-size: 0.6rem; color: var(--text2); text-align: center; line-height: 1.1; }
+.badge-chip small { font-size: 0.72rem; color: var(--text2); text-align: center; line-height: 1.15; }
 
 /* ══════════ Game screens ══════════ */
 .game-header { display: flex; align-items: center; gap: 10px; }
@@ -745,7 +746,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   cursor: pointer;
 }
 .game-title { font-weight: 700; font-size: 1rem; }
-.game-desc { color: var(--text2); font-size: 0.85rem; }
+.game-desc { color: var(--text2); font-size: 0.92rem; }
 .game-error { color: var(--red); padding: 20px; text-align: center; }
 
 .level-grid {
@@ -768,21 +769,21 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .level-btn:not(.locked):hover { border-color: var(--accent2); }
 .level-num { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
-.level-stars { font-size: 0.7rem; color: #ca8a04; letter-spacing: 1px; }
+.level-stars { font-size: 0.78rem; color: #ca8a04; letter-spacing: 1px; }
 .level-btn.locked { opacity: 0.5; cursor: default; }
 
 .game-stage { display: flex; flex-direction: column; gap: var(--gap); flex: 1; min-height: 0; }
 
 /* note-match */
 .nm-top { text-align: center; }
-.nm-progress { font-size: 0.8rem; color: var(--text2); }
+.nm-progress { font-size: 0.9rem; color: var(--text2); }
 .nm-note {
   font-size: clamp(2.4rem, 8vh, 4rem);
   font-weight: 700;
   color: var(--accent);
   line-height: 1.1;
 }
-.nm-instruction { font-size: 0.9rem; color: var(--text2); min-height: 1.4em; }
+.nm-instruction { font-size: 1rem; color: var(--text2); min-height: 1.4em; }
 .nm-roll-wrap { flex: 1; min-height: 160px; }
 .nm-roll { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 .nm-hold {
@@ -829,7 +830,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .score-big { font-size: 3.4rem; font-weight: 700; color: var(--accent); line-height: 1; }
 .score-label { font-size: 1.1rem; font-weight: 600; }
-.score-detail { font-size: 0.85rem; color: var(--text2); }
+.score-detail { font-size: 0.92rem; color: var(--text2); }
 .score-submit { font-size: 1rem; min-height: 1.6em; }
 .xp-pop { color: var(--accent); font-weight: 700; animation: xpPop 0.5s ease; display: inline-block; }
 .streak-pop { color: #ea580c; font-weight: 700; }
@@ -867,11 +868,11 @@ body:not(.auth-locked) .login-view { display: none !important; }
   text-align: center;
 }
 .overlay-card h2 { font-size: 1.15rem; margin-bottom: 6px; }
-.cal-hint { color: var(--text2); font-size: 0.85rem; }
+.cal-hint { color: var(--text2); font-size: 0.92rem; }
 .cal-note { font-size: 3rem; font-weight: 700; color: var(--accent); margin: 10px 0; }
 .cal-progress { height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; }
 .cal-progress-bar { height: 100%; background: var(--green); width: 0%; transition: width 0.1s linear; }
-.cal-status { min-height: 1.6em; font-size: 0.85rem; color: var(--text2); margin-top: 8px; }
+.cal-status { min-height: 1.6em; font-size: 0.92rem; color: var(--text2); margin-top: 8px; }
 .overlay-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
 
 .badge-popup .badge-award {
@@ -886,7 +887,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .badge-emoji { font-size: 2rem; }
 .badge-name { font-weight: 700; }
-.badge-desc { font-size: 0.78rem; color: var(--text2); }
+.badge-desc { font-size: 0.88rem; color: var(--text2); }
 
 /* ══════════ note-hold ══════════ */
 .nh-wrap { display: flex; flex-direction: column; align-items: center; gap: var(--gap); flex: 1; }
@@ -899,7 +900,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .nh-ring-text span { font-size: 2rem; font-weight: 700; color: var(--accent); }
 .nh-ring-text small { color: var(--text2); }
-.nh-wobble { width: 100%; max-width: 280px; font-size: 0.75rem; color: var(--text2); }
+.nh-wobble { width: 100%; max-width: 280px; font-size: 0.85rem; color: var(--text2); }
 .nh-wobble-track { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-top: 3px; }
 .nh-wobble-bar { height: 100%; width: 0%; background: var(--green); transition: width 0.15s ease; border-radius: 4px; }
 
@@ -927,7 +928,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .me-actions { display: flex; justify-content: center; }
 
 /* ══════════ pitch-glide ══════════ */
-.pg-hud { display: flex; justify-content: space-between; font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+.pg-hud { display: flex; justify-content: space-between; font-weight: 600; color: var(--accent); font-size: 1rem; }
 .pg-canvas-wrap { flex: 1; min-height: 220px; }
 .pg-canvas { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 
@@ -945,7 +946,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .teacher-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .teacher-tab {
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   padding: 8px 14px;
   border: 1.5px solid var(--border);
   border-radius: 20px;
@@ -964,7 +965,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   box-shadow: var(--shadow);
   overflow-x: auto;
 }
-.t-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.t-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
 .t-table th {
   text-align: left; padding: 10px 12px;
   color: var(--text2); font-weight: 600;
@@ -992,16 +993,16 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .manage-form { display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
 .pw-row { display: flex; gap: 8px; }
 .pw-row .login-input { flex: 1; }
-.btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: var(--radius-sm); }
+.btn-sm { padding: 6px 11px; font-size: 0.83rem; border-radius: var(--radius-sm); }
 .manage-actions { display: flex; gap: 6px; }
-.prog-grid { display: flex; flex-direction: column; gap: 6px; font-size: 0.85rem; }
+.prog-grid { display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem; }
 .prog-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dashed var(--border); }
 
 /* หน้าที่เลื่อนได้ (hub/game) — section ห้ามถูกบีบตาม no-scroll layout เดิม */
 #pageHub > section, #pageHub > div, #pageGame > div, #pageGame section { flex-shrink: 0; }
 
 /* guest toggle บนหน้าครู */
-.guest-toggle { font-size: 0.85rem; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.guest-toggle { font-size: 0.92rem; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .login-hint a { color: var(--accent); }
 
 /* ══════════ ด่านพิเศษจากหนังสือ ══════════ */
@@ -1021,8 +1022,8 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .book-btn:hover { border-color: #ca8a04; }
 .book-btn-name { font-weight: 700; color: #92400e; }
-.book-btn-desc { font-size: 0.75rem; color: var(--text2); }
-.book-tip { background: #fffbeb; border: 1px dashed rgba(202,138,4,0.4); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.8rem; }
+.book-btn-desc { font-size: 0.85rem; color: var(--text2); }
+.book-tip { background: #fffbeb; border: 1px dashed rgba(202,138,4,0.4); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.9rem; }
 .routine-grid { grid-template-columns: 1fr; }
 .routine-btn { flex-direction: row; gap: 10px; justify-content: flex-start; padding: 12px 14px; }
 .routine-name { font-weight: 700; flex: 1; text-align: left; }
@@ -1037,7 +1038,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .rc-combo.pop { animation: comboPop 0.3s ease; }
 @keyframes comboPop { from { transform: scale(1.5); color: #16a34a; } to { transform: scale(1); } }
-.rc-combo-label { color: var(--text2); font-size: 0.85rem; }
+.rc-combo-label { color: var(--text2); font-size: 0.92rem; }
 
 /* Crescendo guide */
 .cr-guide { position: relative; width: 100%; max-width: 320px; }
@@ -1063,19 +1064,19 @@ body:not(.auth-locked) .login-view { display: none !important; }
   gap: 8px;
   text-align: center;
 }
-.wr-progress { font-size: 0.78rem; color: var(--text2); }
+.wr-progress { font-size: 0.86rem; color: var(--text2); }
 .wr-name { font-size: 1.3rem; color: var(--accent); }
-.wr-instruction { font-size: 0.92rem; text-align: left; line-height: 1.55; }
-.wr-feel { font-size: 0.8rem; color: var(--text2); text-align: left; background: var(--bg3); border-radius: var(--radius-sm); padding: 8px 10px; }
+.wr-instruction { font-size: 1rem; text-align: left; line-height: 1.55; }
+.wr-feel { font-size: 0.9rem; color: var(--text2); text-align: left; background: var(--bg3); border-radius: var(--radius-sm); padding: 8px 10px; }
 .wr-timer { font-size: 2.6rem; font-weight: 700; color: var(--accent); }
 .wr-actions { display: flex; flex-direction: column; gap: 8px; }
 
 /* calibration รอบ 3: VU meter + presets + debug */
 .cal-vu { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
 .cal-vu-bar { height: 100%; width: 0%; background: #94a3b8; border-radius: 4px; transition: width 0.08s linear; }
-.cal-presets { margin-top: 14px; font-size: 0.8rem; color: var(--text2); }
+.cal-presets { margin-top: 14px; font-size: 0.88rem; color: var(--text2); }
 .cal-preset-row { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
-.cal-preset { flex: 1; padding: 10px 6px; font-size: 0.85rem; }
+.cal-preset { flex: 1; padding: 10px 6px; font-size: 0.92rem; }
 .cal-debug {
   font-family: monospace;
   font-size: 0.68rem;
@@ -1088,7 +1089,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 
 /* รอบ 5: hint ไมค์บน hub + toast โหมดเงียบ iOS */
-.hub-range-hint { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+.hub-range-hint { font-size: 0.82rem; color: var(--text2); margin-top: 4px; }
 .snd-toast {
   position: fixed;
   left: 50%;
@@ -1096,7 +1097,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   transform: translate(-50%, 20px);
   background: rgba(13,27,46,0.92);
   color: #fff;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   padding: 10px 16px;
   border-radius: 22px;
   max-width: 90%;
@@ -1119,7 +1120,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .hub-account-btns .logout-btn { text-decoration: none; }
 .hub-guest-row {
   margin-top: 10px;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   color: var(--text2);
   display: flex;
   align-items: center;
@@ -1139,7 +1140,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   align-items: baseline;
   padding: 4px 0;
 }
-.cred-row span { color: var(--text2); font-size: 0.85rem; }
+.cred-row span { color: var(--text2); font-size: 0.92rem; }
 .cred-row strong { font-size: 1.4rem; letter-spacing: 1px; color: var(--accent); font-family: monospace; }
 
 /* หน้า admin: การ์ดสรุปจำนวนผู้เล่น/รอบ/คะแนน */
@@ -1162,8 +1163,8 @@ body:not(.auth-locked) .login-view { display: none !important; }
   color: var(--accent);
   line-height: 1.1;
 }
-.stat-label { font-size: 0.82rem; font-weight: 600; margin-top: 2px; }
-.stat-sub { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+.stat-label { font-size: 0.9rem; font-weight: 600; margin-top: 2px; }
+.stat-sub { font-size: 0.8rem; color: var(--text2); margin-top: 2px; }
 
 /* แก้บั๊ก: gameRoot ไม่เป็น flex → .game-stage flex:1 ไม่ทำงาน → piano roll ถูกบีบเตี้ย
    (เห็นจากภาพ iPhone: C3-C4 ติดกันบนแถบเล็ก ทั้งที่จอส่วนล่างว่าง) */
@@ -1206,7 +1207,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .resume-card .login-hint { margin-top: 8px; }
 .return-info {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   color: var(--text2);
   background: var(--bg3);
   border-radius: var(--radius-sm);
@@ -1233,7 +1234,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   line-height: 1.5;
 }
 .me-game { display: flex; flex-direction: column; gap: var(--gap); flex: 1; min-height: 0; }
@@ -1241,7 +1242,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .phase-banner {
   text-align: center;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   padding: 10px 12px;
   border-radius: var(--radius);
   transition: background 0.3s ease, color 0.3s ease;
@@ -1286,3 +1287,6 @@ body:not(.auth-locked) .login-view { display: none !important; }
   30% { opacity: 1; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* รอบ 14: ฐานตัวอักษรใหญ่ขึ้นทั้งแอป (+6%) — px padding เดิม สัดส่วนการ์ดคงที่ */
+html { font-size: 17px; }
