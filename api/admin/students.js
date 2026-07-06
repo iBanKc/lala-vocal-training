@@ -6,14 +6,16 @@ export default async function handler(req, res) {
   const auth = await requireTeacher(req, res);
   if (!auth) return;
 
-  // ── GET: ภาพรวมห้องเรียน + กิจกรรมล่าสุด ──────────────
+  // ── GET: สรุปรวม + ภาพรวมห้องเรียน + กิจกรรมล่าสุด ────
   if (req.method === 'GET') {
-    const [students, activity] = await Promise.all([
+    const [students, activity, [players], [plays]] = await Promise.all([
       sql`
         SELECT u.id, u.username, u.display_name, u.xp, u.streak_days, u.is_active, u.is_guest,
                u.voice_low_midi, u.voice_high_midi, u.created_at,
                MAX(s.created_at) AS last_active,
                COUNT(s.id)::int AS sessions_total,
+               ROUND(AVG(s.score)::numeric, 0) AS avg_score,
+               MAX(s.score) AS best_score,
                COUNT(s.id) FILTER (WHERE s.created_at > now() - interval '7 days')::int AS sessions_7d,
                ROUND(AVG(s.accuracy_pct) FILTER (WHERE s.created_at > now() - interval '7 days')::numeric, 1) AS acc_7d,
                ROUND(AVG(s.avg_cents_off) FILTER (WHERE s.created_at > now() - interval '7 days')::numeric, 1) AS cents_7d
@@ -28,8 +30,28 @@ export default async function handler(req, res) {
         FROM game_sessions s JOIN users u ON u.id = s.user_id
         ORDER BY s.created_at DESC LIMIT 50
       `,
+      sql`
+        SELECT COUNT(*) FILTER (WHERE NOT is_guest)::int AS students,
+               COUNT(*) FILTER (WHERE is_guest)::int AS guests
+        FROM users WHERE role = 'student' AND is_active
+      `,
+      sql`
+        SELECT COUNT(*)::int AS total_sessions,
+               ROUND(AVG(score)::numeric, 1) AS avg_score,
+               COUNT(*) FILTER (WHERE created_at > now() - interval '24 hours')::int AS sessions_24h,
+               COUNT(DISTINCT user_id) FILTER (WHERE created_at > now() - interval '24 hours')::int AS players_24h
+        FROM game_sessions
+      `,
     ]);
     return res.json({
+      summary: {
+        students: players.students,
+        guests: players.guests,
+        total_sessions: plays.total_sessions,
+        avg_score: plays.avg_score,
+        sessions_24h: plays.sessions_24h,
+        players_24h: plays.players_24h,
+      },
       students: students.map(s => ({ ...s, level: levelFromXp(s.xp) })),
       activity,
     });

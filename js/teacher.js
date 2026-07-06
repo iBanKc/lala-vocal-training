@@ -62,6 +62,30 @@ async function loadOverview() {
 
 function renderOverview() {
   const students = overview.students.filter(s => showGuests || !s.is_guest);
+  const sum = overview.summary;
+
+  // การ์ดสรุปรวมทั้งแอป (ไม่ขึ้นกับ toggle ผู้เยี่ยมชม)
+  $('#statCards').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num">${sum.students + sum.guests}</div>
+      <div class="stat-label">ผู้เล่นทั้งหมด</div>
+      <div class="stat-sub">นักเรียน ${sum.students} · ผู้เยี่ยมชม ${sum.guests}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${sum.total_sessions}</div>
+      <div class="stat-label">รอบที่เล่นทั้งหมด</div>
+      <div class="stat-sub">24 ชม.ล่าสุด ${sum.sessions_24h} รอบ</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${sum.avg_score ?? '—'}</div>
+      <div class="stat-label">คะแนนเฉลี่ยทุกเกม</div>
+      <div class="stat-sub">เต็ม 100</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${sum.players_24h}</div>
+      <div class="stat-label">คนที่เล่นวันนี้</div>
+      <div class="stat-sub">ใน 24 ชม.ล่าสุด</div>
+    </div>`;
 
   $('#studentsTable tbody').innerHTML = students.map(s => `
     <tr class="${s.is_active ? '' : 'inactive-row'}">
@@ -69,11 +93,13 @@ function renderOverview() {
       <td>${s.level}</td>
       <td>${s.xp}</td>
       <td>${s.streak_days || 0}</td>
-      <td>${s.sessions_7d}</td>
+      <td>${s.sessions_total}</td>
+      <td class="${accClass(s.avg_score)}">${s.avg_score != null ? s.avg_score : '—'}</td>
+      <td>${s.best_score != null ? s.best_score : '—'}</td>
       <td class="${accClass(s.acc_7d)}">${s.acc_7d != null ? s.acc_7d + '%' : '—'}</td>
       <td>${s.cents_7d != null ? s.cents_7d + '¢' : '—'}</td>
       <td>${fmtTime(s.last_active)}</td>
-    </tr>`).join('') || '<tr><td colspan="8">ยังไม่มีนักเรียน — เพิ่มได้ที่แท็บ "จัดการนักเรียน"</td></tr>';
+    </tr>`).join('') || '<tr><td colspan="10">ยังไม่มีนักเรียน — เพิ่มได้ที่แท็บ "จัดการนักเรียน"</td></tr>';
 
   document.querySelectorAll('.student-link').forEach(a =>
     a.addEventListener('click', e => { e.preventDefault(); openStudent(Number(a.dataset.id)); }));
