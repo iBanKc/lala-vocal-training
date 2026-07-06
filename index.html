@@ -20,6 +20,12 @@
       <h1 class="login-title">Let's Sing</h1>
       <p class="login-sub">เกมฝึกร้องเพลงฟรี โดยโรงเรียนดนตรี Blues Dot Music</p>
 
+      <!-- บัญชี guest ที่จำไว้ในเครื่อง: กลับเข้าเล่นกดเดียว -->
+      <div id="resumeCard" class="resume-card hidden">
+        <button class="btn-start login-btn" id="resumeBtn">▶ กลับเข้าเล่น</button>
+        <p class="login-hint"><a href="#" id="resumeDismiss">ไม่ใช่ฉัน / เริ่มเป็นคนใหม่</a></p>
+      </div>
+
       <!-- โหมดผู้เยี่ยมชม (ค่าเริ่มต้น): ตั้งชื่อเล่นแล้วเล่นเลย -->
       <form id="guestForm">
         <label class="login-label" for="guestNickname">ตั้งชื่อเล่นแล้วเริ่มร้องเลย! 🎤</label>
@@ -28,12 +34,35 @@
         <div id="guestError" class="login-error"></div>
         <button id="guestSubmit" class="btn-start login-btn" type="submit">🎵 เริ่มเลย!</button>
       </form>
-      <p class="login-hint">
-        <a href="#" id="showLoginLink">เป็นนักเรียน/ครูของโรงเรียน? เข้าสู่ระบบ</a>
+      <div id="guestLinks">
+        <p class="login-hint">
+          <a href="#" id="showReturnLink">🎟 เคยเล่นแล้ว มีรหัสกลับเข้าเล่น? กรอกที่นี่</a>
+        </p>
+        <p class="login-hint">
+          <a href="#" id="showLoginLink">เป็นนักเรียน/ครูของโรงเรียน? เข้าสู่ระบบ</a>
+        </p>
+      </div>
+
+      <!-- ฟอร์มรหัสกลับเข้าเล่น (ผู้เยี่ยมชมที่เคยเล่น) — แยกจาก login โรงเรียน -->
+      <form id="returnForm" class="hidden">
+        <p class="return-info">🎟 ใส่ <strong>รหัสกลับเข้าเล่น</strong> ที่แอปให้ไว้ตอนเริ่มเล่นครั้งแรก<br>
+        (ชื่อผู้ใช้ขึ้นต้นด้วย s ตามด้วยตัวเลข เช่น s12345) — คะแนนสะสมจะกลับมาครบ</p>
+        <label class="login-label" for="returnUsername">ชื่อผู้ใช้</label>
+        <input id="returnUsername" class="login-input" type="text" placeholder="เช่น s12345"
+               autocapitalize="none" spellcheck="false" required />
+        <label class="login-label" for="returnPassword">รหัสผ่าน</label>
+        <input id="returnPassword" class="login-input" type="text" autocapitalize="none"
+               spellcheck="false" placeholder="เช่น kupomi42" required />
+        <div id="returnError" class="login-error"></div>
+        <button id="returnSubmit" class="btn-start login-btn" type="submit">🎟 กลับเข้าเล่น</button>
+      </form>
+      <p class="login-hint hidden" id="backFromReturnHint">
+        <a href="#" id="backFromReturnLink">‹ กลับ</a>
       </p>
 
-      <!-- โหมด login เดิม (นักเรียนจริง/ครู) -->
+      <!-- โหมด login โรงเรียน (นักเรียนจริง/ครู) -->
       <form id="loginForm" autocomplete="on" class="hidden">
+        <p class="return-info">สำหรับ<strong>นักเรียนและครู</strong>ของโรงเรียน Blues Dot Music<br>ใช้บัญชีที่คุณครูสร้างให้</p>
         <label class="login-label" for="loginUsername">ชื่อผู้ใช้</label>
         <input id="loginUsername" class="login-input" type="text" autocomplete="username"
                autocapitalize="none" spellcheck="false" required />
@@ -43,7 +72,7 @@
         <button id="loginSubmit" class="btn-start login-btn" type="submit">เข้าสู่ระบบ</button>
       </form>
       <p class="login-hint hidden" id="backToGuestHint">
-        <a href="#" id="showGuestLink">‹ กลับไปเล่นแบบผู้เยี่ยมชม</a>
+        <a href="#" id="showGuestLink">‹ กลับ</a>
       </p>
     </div>
   </div>

@@ -1186,3 +1186,23 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .pg-guide-btn:disabled { opacity: 0.5; }
 .pg-canvas-wrap { position: relative; }
+
+/* การ์ด "กลับเข้าเล่น" + คำอธิบายฟอร์ม */
+.resume-card {
+  background: linear-gradient(135deg, #f0fdf4, var(--bg2));
+  border: 1.5px solid rgba(22,163,74,0.35);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.resume-card .login-hint { margin-top: 8px; }
+.return-info {
+  font-size: 0.82rem;
+  color: var(--text2);
+  background: var(--bg3);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-align: left;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
