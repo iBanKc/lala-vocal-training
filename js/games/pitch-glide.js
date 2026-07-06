@@ -2,7 +2,7 @@
 // (hold / step / arpeggio / siren) — ฝึก pitch control และการ glide ระหว่างโน้ต
 // คะแนน = 80×(ห่วงที่ลอดได้/ทั้งหมด) + 20×ความลื่นไหลช่วง glide
 import { MicSession, midiToFreq, midiToNoteName, NOTE_NAMES } from '../pitch-engine.js';
-import { playGlide } from '../tone.js';
+import { playGlide, playNote } from '../tone.js';
 
 function tolerance(level) {
   return [100, 90, 80, 70, 60, 55, 50, 45, 40, 35][level - 1];
@@ -104,6 +104,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   stage.innerHTML = `
     <div class="nm-top">
       <div class="nm-instruction" id="pgInstruction">เตรียมตัว... ใช้เสียง "อู" หรือ "อา" บังคับลูกโป่ง</div>
+      <div class="pg-target-note" id="pgNote">—</div>
       <div class="pg-hud"><span id="pgHits">🎯 0/${rings.length}</span><span id="pgTime"></span></div>
     </div>
     <div class="pg-canvas-wrap">
@@ -112,6 +113,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     </div>`;
 
   const instrEl = stage.querySelector('#pgInstruction');
+  const noteEl = stage.querySelector('#pgNote');
   const hitsEl = stage.querySelector('#pgHits');
   const timeEl = stage.querySelector('#pgTime');
   const canvas = stage.querySelector('#pgCanvas');
@@ -124,8 +126,18 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
 
   const viewLow = voiceLow - 2, viewHigh = voiceHigh + 2;
   const yOf = midi => H - ((midi - viewLow) / (viewHigh - viewLow)) * H;
-  const PX_PER_SEC = W / 5;        // เห็นล่วงหน้า ~3.75 วิ
-  const BALLOON_X = W * 0.25;
+  const PIANO_W = 46;              // คีย์เปียโนแนวตั้งฝั่งขวา
+  const FIELD_W = W - PIANO_W;     // สนามบิน (เส้นทาง/ห่วง) ไม่ทับเปียโน
+  const PX_PER_SEC = FIELD_W / 5;
+  const BALLOON_X = FIELD_W * 0.25;
+
+  // โน้ตเป้าหมายบนเส้นทาง ณ เวลาใดก็ได้ (ก่อนเริ่ม = โน้ตแรก, จบแล้ว = โน้ตสุดท้าย)
+  const courseMidiAt = ts => {
+    if (ts <= 0) return course[0].fn(0);
+    const seg = course.find(s => ts >= s.t0 && ts < s.t1);
+    if (seg) return seg.fn((ts - seg.t0) / (seg.t1 - seg.t0));
+    return course[course.length - 1].fn(1);
+  };
 
   let running = false;
   let t0 = 0;                       // performance.now() ตอนเริ่มบิน
@@ -153,7 +165,16 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     try { await playGlide(freqs, DUR, { vowel: 'oo' }); } finally { guideBtn.disabled = false; }
   });
 
+  let lastNoteName = '';
+
   function draw(nowSec) {
+    const targetMidi = courseMidiAt(nowSec);
+    const targetRound = Math.round(targetMidi);
+
+    // ป้ายชื่อโน้ตเป้าหมาย (อัปเดตเฉพาะตอนเปลี่ยน กัน DOM ทำงานทุกเฟรม)
+    const name = midiToNoteName(targetRound);
+    if (name !== lastNoteName) { lastNoteName = name; noteEl.textContent = `🎯 ${name}`; }
+
     ctx.clearRect(0, 0, W, H);
     // ท้องฟ้า
     const grad = ctx.createLinearGradient(0, 0, 0, H);
@@ -167,14 +188,22 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       const y = yOf(m);
       ctx.strokeStyle = 'rgba(33,150,243,0.15)';
       ctx.setLineDash([4, 6]);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(FIELD_W, y); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = 'rgba(74,101,133,0.5)';
       ctx.font = '10px Inter, sans-serif';
       ctx.fillText(NOTE_NAMES[0] + (Math.floor(m / 12) - 1), 4, y - 3);
     }
 
-    // เส้นทางบิน (เส้นนำสายตา)
+    // เส้นนำสายตาวิ่งเข้าคีย์คำตอบ: เส้นประเขียวที่ระดับโน้ตเป้าหมายปัจจุบัน
+    const ty = yOf(targetMidi);
+    ctx.strokeStyle = 'rgba(22,163,74,0.55)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath(); ctx.moveTo(BALLOON_X, ty); ctx.lineTo(FIELD_W, ty); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // เส้นทางบิน (เส้นนำสายตา) — หยุดที่ขอบเปียโน
     ctx.strokeStyle = 'rgba(25,118,210,0.35)';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -183,16 +212,17 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       const seg = course.find(s => ts >= s.t0 && ts < s.t1);
       if (!seg) { first = true; continue; }
       const x = BALLOON_X + (ts - nowSec) * PX_PER_SEC;
+      if (x > FIELD_W) break;
       const y = yOf(seg.fn((ts - seg.t0) / (seg.t1 - seg.t0)));
       if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
     }
     ctx.stroke();
 
-    // ห่วง
+    // ห่วง — โผล่จากหลังเปียโน
     const tolSemi = tol / 100;
     for (const ring of rings) {
       const x = BALLOON_X + (ring.time - nowSec) * PX_PER_SEC;
-      if (x < -30 || x > W + 30) continue;
+      if (x < -30 || x > FIELD_W - 12) continue;
       const y = yOf(ring.midi);
       const rh = Math.max(14, (yOf(ring.midi - tolSemi) - yOf(ring.midi + tolSemi)) / 2);
       ctx.lineWidth = 4;
@@ -208,6 +238,39 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     ctx.textAlign = 'center';
     ctx.fillText('🎈', BALLOON_X, by + 10);
     ctx.textAlign = 'left';
+
+    // ── คีย์เปียโนแนวตั้งฝั่งขวา — คีย์คำตอบไฮไลต์เขียว ──
+    const laneH = H / (viewHigh - viewLow);
+    const BLACK = new Set([1, 3, 6, 8, 10]);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(FIELD_W, 0, PIANO_W, H);
+    const balloonRound = Math.round(balloonMidi);
+    for (let m = Math.ceil(viewLow); m <= Math.floor(viewHigh); m++) {
+      const pc = ((m % 12) + 12) % 12;
+      const yTop = yOf(m + 0.5);
+      const isBlack = BLACK.has(pc);
+      const isTarget = m === targetRound;
+      const keyW = isBlack ? PIANO_W * 0.62 : PIANO_W;
+      ctx.fillStyle = isTarget ? '#16a34a' : isBlack ? '#334155' : '#ffffff';
+      ctx.fillRect(FIELD_W, yTop, keyW, laneH);
+      ctx.strokeStyle = 'rgba(13,27,46,0.18)';
+      ctx.strokeRect(FIELD_W + 0.5, yTop + 0.5, keyW - 1, laneH - 1);
+      if (isTarget && laneH >= 9) {
+        ctx.fillStyle = '#fff';
+        ctx.font = `700 ${Math.min(12, laneH - 1)}px Inter, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.fillText(midiToNoteName(m), W - 4, yTop + laneH / 2 + 4);
+        ctx.textAlign = 'left';
+      } else if (m === balloonRound && running) {
+        // จุดฟ้า = คีย์ที่เสียงผู้เล่นอยู่ตอนนี้
+        ctx.fillStyle = '#1976D2';
+        ctx.beginPath();
+        ctx.arc(FIELD_W + PIANO_W - 8, yTop + laneH / 2, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.strokeStyle = 'rgba(13,27,46,0.35)';
+    ctx.strokeRect(FIELD_W + 0.5, 0.5, PIANO_W - 1, H - 1);
   }
 
   const mic = new MicSession({
@@ -263,6 +326,14 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       if (signal.aborted) return null;
       await wait(100);
     }
+
+    // เล่นโน้ตแรกให้ฟังก่อนเริ่ม (call-and-response)
+    const firstMidi = courseMidiAt(0);
+    instrEl.textContent = `👂 ฟังโน้ตแรก... ${midiToNoteName(Math.round(firstMidi))}`;
+    draw(0);
+    await playNote(midiToFreq(firstMidi), 1.3, { vowel: 'oo' });
+    await wait(250);
+    if (signal.aborted) return null;
 
     // นับถอยหลัง
     for (const c of ['3', '2', '1', '🎈 บิน!']) {

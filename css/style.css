@@ -1206,3 +1206,12 @@ body:not(.auth-locked) .login-view { display: none !important; }
   line-height: 1.5;
   margin-bottom: 4px;
 }
+
+/* เสียงพาบิน: ป้ายชื่อโน้ตเป้าหมาย (แสดงตลอดเวลา) */
+.pg-target-note {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
