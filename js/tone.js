@@ -5,7 +5,7 @@
 //   สร้างเองเฉพาะกรณีไม่มีไมค์เปิด (เช่น หน้า audition) พร้อม pointerdown recovery
 import { midiToFreq } from './pitch-engine.js';
 import { getSharedContext } from './audio-ctx.js';
-import { playVoiceNote } from './voice-synth.js';
+import { playVoiceNote, playVoiceGlide } from './voice-synth.js';
 
 let ownCtx = null;
 let masterGainValue = 1.0;
@@ -107,4 +107,11 @@ export async function playMelody(midis, { noteDur = 0.6, gap = 0.12, instrument 
     await playNote(midiToFreq(m), noteDur, { instrument, vowel });
     if (gap > 0) await new Promise(r => setTimeout(r, gap * 1000));
   }
+}
+
+// เสียงไกด์ไล่ตามเส้น (glissando) — รับลิสต์ความถี่ Hz คืน Promise เมื่อจบ
+export function playGlide(freqs, durSec, { vowel = 'oo', gain = 0.85 } = {}) {
+  const ctx = ensureCtx();
+  maybeShowIosSilentHint();
+  return playVoiceGlide(ctx, { freqs, durSec, vowel, gain, destination: outputNode(ctx) });
 }

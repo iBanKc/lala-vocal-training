@@ -1,7 +1,8 @@
 // เกมเสียงพาบิน — ลูกโป่งลอยตามระดับเสียง บินลอดห่วงที่วางตาม pattern วอร์มเสียงจริง
 // (hold / step / arpeggio / siren) — ฝึก pitch control และการ glide ระหว่างโน้ต
 // คะแนน = 80×(ห่วงที่ลอดได้/ทั้งหมด) + 20×ความลื่นไหลช่วง glide
-import { MicSession, midiToNoteName, NOTE_NAMES } from '../pitch-engine.js';
+import { MicSession, midiToFreq, midiToNoteName, NOTE_NAMES } from '../pitch-engine.js';
+import { playGlide } from '../tone.js';
 
 function tolerance(level) {
   return [100, 90, 80, 70, 60, 55, 50, 45, 40, 35][level - 1];
@@ -105,7 +106,10 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       <div class="nm-instruction" id="pgInstruction">เตรียมตัว... ใช้เสียง "อู" หรือ "อา" บังคับลูกโป่ง</div>
       <div class="pg-hud"><span id="pgHits">🎯 0/${rings.length}</span><span id="pgTime"></span></div>
     </div>
-    <div class="pg-canvas-wrap"><canvas id="pgCanvas" class="pg-canvas"></canvas></div>`;
+    <div class="pg-canvas-wrap">
+      <canvas id="pgCanvas" class="pg-canvas"></canvas>
+      <button class="pg-guide-btn" id="pgGuide">🔊 ไกด์</button>
+    </div>`;
 
   const instrEl = stage.querySelector('#pgInstruction');
   const hitsEl = stage.querySelector('#pgHits');
@@ -130,6 +134,24 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   let hits = 0;
   const deltas = [];                // |Δcents| ต่อเฟรมช่วง glide (วัดความลื่นไหล)
   let prevMidi = null;
+  let guideUsed = 0;
+
+  // ปุ่ม 🔊 ไกด์: ร้องนำเส้นทาง 1.6 วิข้างหน้าให้ฟังระหว่างบิน (กดได้ตลอด ไม่หักคะแนน)
+  const guideBtn = stage.querySelector('#pgGuide');
+  guideBtn.addEventListener('click', async () => {
+    const nowSec = running ? (performance.now() - t0) / 1000 : 0;
+    const DUR = 1.6, N = 32;
+    const freqs = [];
+    for (let i = 0; i < N; i++) {
+      const ts = Math.min(courseDur - 0.01, nowSec + (i / (N - 1)) * DUR);
+      const seg = course.find(s => ts >= s.t0 && ts < s.t1) || course[course.length - 1];
+      const u = Math.min(1, Math.max(0, (ts - seg.t0) / (seg.t1 - seg.t0)));
+      freqs.push(midiToFreq(seg.fn(u)));
+    }
+    guideUsed++;
+    guideBtn.disabled = true;
+    try { await playGlide(freqs, DUR, { vowel: 'oo' }); } finally { guideBtn.disabled = false; }
+  });
 
   function draw(nowSec) {
     ctx.clearRect(0, 0, W, H);
@@ -276,6 +298,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       rings_hit: hits,
       smoothness: Math.round(smoothness * 100) / 100,
       tolerance: tol,
+      guide_used: guideUsed,
       ...(exercise ? { exercise: exercise.id } : {}),
     },
   };

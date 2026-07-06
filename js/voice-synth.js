@@ -112,3 +112,70 @@ export function playVoiceNote(ctx, {
 
   return new Promise(res => { osc1.onended = res; });
 }
+
+// เสียงคนไกด์แบบ "ไล่เสียงตามเส้น" (glissando) — ใช้ในเกมเสียงพาบิน:
+// รับลิสต์ความถี่ (จุดบนเส้นทางบิน) แล้วให้เสียงเลื่อนตามต่อเนื่องด้วย setValueCurveAtTime
+export function playVoiceGlide(ctx, { freqs, durSec, vowel = 'oo', gain = 0.9, destination = null } = {}) {
+  if (!freqs || freqs.length < 2) return Promise.resolve();
+  const dest = destination || ctx.destination;
+  const t = ctx.currentTime;
+  const curve = freqs instanceof Float32Array ? freqs : new Float32Array(freqs);
+  const midMidi = 69 + 12 * Math.log2(curve[curve.length >> 1] / 440);
+  const formantScale = 1 + Math.max(0, midMidi - 60) * 0.006;
+  const bands = VOWELS[vowel] || VOWELS.oo;
+
+  const osc1 = ctx.createOscillator();
+  const osc2 = ctx.createOscillator();
+  osc1.type = osc2.type = 'sawtooth';
+  osc1.detune.value = -5;
+  osc2.detune.value = +5;
+  for (const o of [osc1, osc2]) {
+    o.frequency.setValueAtTime(curve[0], t);
+    o.frequency.setValueCurveAtTime(curve, t, durSec);
+  }
+
+  const source = ctx.createGain();
+  source.gain.value = 0.5;
+  osc1.connect(source);
+  osc2.connect(source);
+
+  const mix = ctx.createGain();
+  for (const b of bands) {
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = b.f * formantScale;
+    bp.Q.value = b.q;
+    const g = ctx.createGain();
+    g.gain.value = b.g;
+    source.connect(bp);
+    bp.connect(g);
+    g.connect(mix);
+  }
+  const body = ctx.createBiquadFilter();
+  body.type = 'lowpass';
+  body.frequency.value = 800;
+  const bodyGain = ctx.createGain();
+  bodyGain.gain.value = 0.25;
+  source.connect(body);
+  body.connect(bodyGain);
+  bodyGain.connect(mix);
+
+  const polish = ctx.createBiquadFilter();
+  polish.type = 'lowpass';
+  polish.frequency.value = 4200;
+  const env = ctx.createGain();
+  env.gain.setValueAtTime(0, t);
+  env.gain.linearRampToValueAtTime(gain, t + 0.05);
+  env.gain.setValueAtTime(gain, t + Math.max(0.06, durSec - 0.1));
+  env.gain.linearRampToValueAtTime(0, t + durSec);
+
+  mix.connect(polish);
+  polish.connect(env);
+  env.connect(dest);
+
+  osc1.start(t);
+  osc2.start(t);
+  osc1.stop(t + durSec + 0.05);
+  osc2.stop(t + durSec + 0.05);
+  return new Promise(res => { osc1.onended = res; });
+}

@@ -1155,3 +1155,34 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .stat-label { font-size: 0.82rem; font-weight: 600; margin-top: 2px; }
 .stat-sub { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+
+/* แก้บั๊ก: gameRoot ไม่เป็น flex → .game-stage flex:1 ไม่ทำงาน → piano roll ถูกบีบเตี้ย
+   (เห็นจากภาพ iPhone: C3-C4 ติดกันบนแถบเล็ก ทั้งที่จอส่วนล่างว่าง) */
+#gameRoot {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: var(--gap);
+}
+.nm-roll-wrap { min-height: 240px; }
+.pg-canvas-wrap { min-height: 260px; }
+
+/* ปุ่มขอฟังเสียงไกด์ระหว่างบิน (pitch-glide) */
+.pg-guide-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 22px;
+  background: rgba(25,118,210,0.92);
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+.pg-guide-btn:disabled { opacity: 0.5; }
+.pg-canvas-wrap { position: relative; }
