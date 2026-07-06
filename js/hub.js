@@ -49,13 +49,14 @@ function render() {
         ${Object.entries(GAMES).map(([id, g]) => {
           const stars = totalStars(id);
           const lv = unlockedLevel(id, g.maxLevel);
+          const lockedForGuest = g.schoolOnly && u.is_guest;
           return `<button class="game-card ${g.available ? '' : 'coming-soon'}" data-game="${id}" ${g.available ? '' : 'disabled'}>
             <span class="game-card-icon">${g.icon}</span>
             <span class="game-card-title">${g.title}</span>
             <span class="game-card-desc">${g.desc}</span>
-            <span class="game-card-meta">${g.available
-              ? `⭐ ${stars}/${g.maxLevel * 3} · ด่าน ${lv}/${g.maxLevel}`
-              : 'เร็ว ๆ นี้'}</span>
+            <span class="game-card-meta">${!g.available ? 'เร็ว ๆ นี้'
+              : lockedForGuest ? '🔒 เฉพาะนักเรียน Blues Dot Music'
+              : `⭐ ${stars}/${g.maxLevel * 3} · ด่าน ${lv}/${g.maxLevel}`}</span>
           </button>`;
         }).join('')}
       </div>

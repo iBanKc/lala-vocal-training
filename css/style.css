@@ -1290,3 +1290,27 @@ body:not(.auth-locked) .login-view { display: none !important; }
 
 /* รอบ 14: ฐานตัวอักษรใหญ่ขึ้นทั้งแอป (+6%) — px padding เดิม สัดส่วนการ์ดคงที่ */
 html { font-size: 17px; }
+
+/* ข้อความแจ้งใหญ่กลางจอ ค้าง 2 วิ (เช่น เกมเฉพาะนักเรียนโรงเรียน) */
+.flash-notice {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13,27,46,0.55);
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  padding: 20px;
+}
+.flash-notice.show { opacity: 1; }
+.flash-notice span {
+  font-size: clamp(1.5rem, 7vw, 2.2rem);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  line-height: 1.4;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+}

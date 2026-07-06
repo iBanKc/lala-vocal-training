@@ -41,9 +41,13 @@ export default async function handler(req, res) {
 
   // ── ด่านต้องปลดล็อกแล้ว: เล่นได้ถึง (ด่านสูงสุดที่ได้ ≥2 ดาว) + 1 ──
   const [user] = await sql`
-    SELECT xp, streak_days, last_practice_date FROM users WHERE id = ${auth.userId} AND is_active
+    SELECT xp, streak_days, last_practice_date, is_guest FROM users WHERE id = ${auth.userId} AND is_active
   `;
   if (!user) return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้' });
+
+  // วอร์มพื้นฐาน = สิทธิ์เฉพาะบัญชีโรงเรียน (นักเรียน/ครู)
+  if (gameId === 'warmup_routine' && user.is_guest)
+    return res.status(403).json({ error: 'เฉพาะนักเรียน Blues Dot Music' });
 
   // ด่านพิเศษจากคลังแบบฝึก + วอร์มไกด์ ปลดล็อกเสมอ; ด่านปกติต้องผ่านลำดับ
   const [unlock] = await sql`

@@ -11,7 +11,7 @@ export const GAMES = {
   melody_echo:  { title: 'ร้องตามทำนอง', icon: '🦜', desc: 'ฟังทำนองแล้วร้องตาม',    maxLevel: 12, available: true,  load: () => import('./games/melody-echo.js') },
   pitch_glide:  { title: 'เสียงพาบิน',   icon: '🎈', desc: 'ใช้เสียงบังคับลูกโป่งลอดห่วง', maxLevel: 10, available: true,  load: () => import('./games/pitch-glide.js') },
   song_compare: { title: 'ร้องเพลงเต็ม', icon: '🎤', desc: 'ร้องทั้งเพลงเทียบต้นฉบับ',  maxLevel: 1,  available: true,  load: () => import('./games/song-compare.js') },
-  warmup_routine: { title: 'วอร์มพื้นฐาน', icon: '🤸', desc: 'ท่าวอร์มร่างกาย ลม ลิ้น จาก Blues Dot Music', maxLevel: WARMUP_ROUTINES.length, available: true, noCalibration: true, load: () => import('./games/warmup-routine.js') },
+  warmup_routine: { title: 'วอร์มพื้นฐาน', icon: '🤸', desc: 'ท่าวอร์มร่างกาย ลม ลิ้น จาก Blues Dot Music', maxLevel: WARMUP_ROUTINES.length, available: true, noCalibration: true, schoolOnly: true, load: () => import('./games/warmup-routine.js') },
 };
 
 const pageGame = () => document.getElementById('pageGame');
@@ -34,10 +34,29 @@ export function abortActiveGame() {
 document.querySelectorAll('.nav-btn').forEach(btn =>
   btn.addEventListener('click', abortActiveGame));
 
+// ข้อความใหญ่กลางจอ ค้าง 2 วิแล้วหายไป (ใช้แจ้งสิทธิ์/เตือนสั้น ๆ)
+export function flashNotice(text, holdMs = 2000) {
+  const el = document.createElement('div');
+  el.className = 'flash-notice';
+  el.innerHTML = `<span>${text}</span>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 350);
+  }, holdMs);
+}
+
 // ── หน้าเลือกด่าน ──────────────────────────────────────
 export async function openGame(gameId) {
   const game = GAMES[gameId];
   if (!game || !game.available) return;
+
+  // เกมเฉพาะบัญชีโรงเรียน (นักเรียน/ครู) — guest เห็นข้อความแจ้งแล้วอยู่หน้าเดิม
+  if (game.schoolOnly && state.user?.is_guest) {
+    flashNotice('เฉพาะนักเรียน Blues Dot Music');
+    return;
+  }
 
   if (!game.noCalibration && !(await ensureCalibrated())) return; // ต้องรู้ช่วงเสียงก่อน
 
