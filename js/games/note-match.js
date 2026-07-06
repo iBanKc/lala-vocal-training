@@ -191,10 +191,10 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   };
 }
 
-// ── โหมด Hee-ah (จากหนังสือ): ร้องซ้ำโน้ตเดิมให้ได้มากที่สุดในหนึ่งลมหายใจ ──
+// ── โหมด Hee-ah (จากคลังแบบฝึก): ร้องซ้ำโน้ตเดิมให้ได้มากที่สุดในหนึ่งลมหายใจ ──
 // นับ 1 ครั้ง = segment เสียงนิ่ง ≥250ms ที่ตรงโน้ต (±40¢) — จบเมื่อเงียบ >1.5s หรือครบ 25s
 async function runRepeatCount({ stage, signal, voiceLow, voiceHigh, exercise }) {
-  const target = Math.round((voiceLow + voiceHigh) / 2) - 1; // ช่วงเสียงกลางค่อนต่ำ ตามหนังสือ
+  const target = Math.round((voiceLow + voiceHigh) / 2) - 1; // ช่วงเสียงกลางค่อนต่ำ ตามแบบฝึก
   const targetReps = exercise.targetReps || 15;
 
   stage.innerHTML = `

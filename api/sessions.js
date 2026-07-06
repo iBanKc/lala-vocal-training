@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   `;
   if (!user) return res.status(401).json({ error: 'ไม่พบบัญชีผู้ใช้' });
 
-  // ด่านพิเศษจากหนังสือ + วอร์มไกด์ ปลดล็อกเสมอ; ด่านปกติต้องผ่านลำดับ
+  // ด่านพิเศษจากคลังแบบฝึก + วอร์มไกด์ ปลดล็อกเสมอ; ด่านปกติต้องผ่านลำดับ
   const [unlock] = await sql`
     SELECT COALESCE(MAX(level), 0) AS max_cleared
     FROM game_progress WHERE user_id = ${auth.userId} AND game_id = ${gameId} AND best_stars >= 2 AND level <= 100

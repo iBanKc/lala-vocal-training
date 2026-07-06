@@ -50,7 +50,7 @@ function buildCourse(level, voiceLow, voiceHigh) {
   return segs;
 }
 
-// เส้นทางบินจากแบบฝึกหัดในหนังสือ (Ng / Ning): สเกลไล่ลง 5-4-3-2-1 legato
+// เส้นทางบินจากคลังแบบฝึก (Ng / Ning): สเกลไล่ลง 5-4-3-2-1 legato
 // ขยับขึ้นครึ่งเสียงต่อ key; Ng ต่อท้ายด้วยไล่ลงหนึ่งอ็อกเทฟ
 function buildExerciseCourse(exercise, voiceLow, voiceHigh) {
   const beat = 60 / (exercise.tempo || 60);
@@ -88,7 +88,7 @@ function buildExerciseCourse(exercise, voiceLow, voiceHigh) {
 }
 
 export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise }) {
-  const tol = exercise ? 60 : tolerance(level); // แบบฝึกหนังสือใช้ห่วงขนาดกลางคงที่
+  const tol = exercise ? 60 : tolerance(level); // ด่านแบบฝึกใช้ห่วงขนาดกลางคงที่
   const course = exercise
     ? buildExerciseCourse(exercise, voiceLow, voiceHigh)
     : buildCourse(level, voiceLow, voiceHigh);

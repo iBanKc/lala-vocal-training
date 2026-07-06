@@ -1,7 +1,7 @@
 // เกมเสียงนิ่ง — ลากเสียงให้นิ่ง (ฝึกลมหายใจ + ความนิ่งของเสียง)
 // ความยาก = ความสูงของโน้ต × ความยาวที่ต้องค้าง (สูงสุด 12 วิ)
 //   L1-5: โน้ตเดียว สุ่มตำแหน่งสูงขึ้นตาม level, ค้าง 4→12 วิ
-//   L6-8: สเกล 5 โน้ต ตามแบบฝึกหัดจากหนังสือ "เสียงใหม่ฯ" (L7 ไล่ลงแบบ Ng/Kah-kee-koh)
+//   L6-8: สเกล 5 โน้ต จากคลังแบบฝึกของโรงเรียน (L7 ไล่ลงแบบ Ng/Kah-kee-koh)
 // คะแนนต่อโน้ต = 70×(เวลาที่ค้างได้/เป้า) + โบนัสความนิ่ง (30 − stddev cents)
 import {
   MicSession, SegmentTracker, midiToFreq, midiToNoteName,
@@ -26,7 +26,7 @@ export function config(level) {
     holdPerNote: [2.0, 2.2, 2.4][j],                                       // รวม 10/11/12 วิ
     tolerance: [22, 20, 18][j],
     tonicFrac: [0.35, 0.55, 0.75][j],
-    descending: level === 7,                                               // ไล่ลงตามหนังสือ
+    descending: level === 7,                                               // ไล่ลงตามแบบฝึก
   };
 }
 
@@ -68,7 +68,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       <div class="nh-wobble-track"><div class="nh-wobble-bar" id="nhWobble"></div></div>
     </div>
     <div class="nm-status" id="nhStatus"></div>
-    ${cfg.scale ? `<p class="login-hint">${BOOK.credit} — สเกล 5 โน้ต${cfg.descending ? 'ไล่ลง' : ''}</p>` : ''}`;
+    ${cfg.scale ? `<p class="login-hint">${BOOK.credit} · สเกล 5 โน้ต${cfg.descending ? 'ไล่ลง' : ''}</p>` : ''}`;
 
   const dots = [...stage.querySelectorAll('.me-dot')];
   const progEl = stage.querySelector('#nhProgress');
@@ -232,7 +232,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   };
 }
 
-// ── โหมด Crescendo-Decrescendo (แบบฝึกหัดที่ 38 จากหนังสือ) ──
+// ── โหมด Crescendo-Decrescendo (แบบฝึกหัดที่ 38 จากคลังแบบฝึก) ──
 // ร้องโน้ตเดียว 8 วิ: เบา → ดัง → เบา — คะแนน 60% ความนิ่งของ pitch + 40% รูปทรงความดัง
 async function runCrescendo({ stage, signal, voiceLow, voiceHigh, exercise }) {
   const target = Math.round((voiceLow + voiceHigh) / 2);

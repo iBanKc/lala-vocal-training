@@ -1,4 +1,4 @@
-// วอร์มตามหนังสือ "เสียงใหม่ฯ" — ท่ากายภาพแบบไกด์ + จับเวลา
+// วอร์มพื้นฐาน Blues Dot Music — ท่ากายภาพแบบไกด์ + จับเวลา
 // step ปกติ: การ์ดวิธีทำ + นาฬิกานับถอยหลัง; step 'hiss' (S-s-s Breath): ใช้ไมค์จับเวลาลมจริง
 import { MicSession } from '../pitch-engine.js';
 import { BOOK } from '../curriculum.js';

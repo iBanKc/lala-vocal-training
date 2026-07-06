@@ -197,7 +197,7 @@ console.log('\n── 8. stepFreqBounds: ขอบเขตความถี่
   check(`ขั้น high (low=G3): floor ≈246.9 (ได้ ${highG3.fmin.toFixed(1)})`, Math.abs(highG3.fmin - 246.94) < 0.1);
 }
 
-console.log('\n── 9. เกมเสียงนิ่ง: ความยาก = สูง×ยาว, cap 12 วิ, สเกลจากหนังสือ ──');
+console.log('\n── 9. เกมเสียงนิ่ง: ความยาก = สูง×ยาว, cap 12 วิ, สเกลจากคลังแบบฝึก ──');
 {
   const { config, pickHoldNote, scaleNotes } = await import('../js/games/note-hold.js');
   const LOW = 48, HIGH = 72; // C3–C5

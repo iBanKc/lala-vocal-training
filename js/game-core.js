@@ -11,7 +11,7 @@ export const GAMES = {
   melody_echo:  { title: 'ร้องตามทำนอง', icon: '🦜', desc: 'ฟังทำนองแล้วร้องตาม',    maxLevel: 12, available: true,  load: () => import('./games/melody-echo.js') },
   pitch_glide:  { title: 'เสียงพาบิน',   icon: '🎈', desc: 'ใช้เสียงบังคับลูกโป่งลอดห่วง', maxLevel: 10, available: true,  load: () => import('./games/pitch-glide.js') },
   song_compare: { title: 'ร้องเพลงเต็ม', icon: '🎤', desc: 'ร้องทั้งเพลงเทียบต้นฉบับ',  maxLevel: 1,  available: true,  load: () => import('./games/song-compare.js') },
-  warmup_routine: { title: 'วอร์มตามหนังสือ', icon: '🤸', desc: 'ท่าวอร์มร่างกาย ลม ลิ้น จากหนังสือ เสียงใหม่ฯ', maxLevel: WARMUP_ROUTINES.length, available: true, noCalibration: true, load: () => import('./games/warmup-routine.js') },
+  warmup_routine: { title: 'วอร์มพื้นฐาน', icon: '🤸', desc: 'ท่าวอร์มร่างกาย ลม ลิ้น จาก Blues Dot Music', maxLevel: WARMUP_ROUTINES.length, available: true, noCalibration: true, load: () => import('./games/warmup-routine.js') },
 };
 
 const pageGame = () => document.getElementById('pageGame');
@@ -45,7 +45,7 @@ export async function openGame(gameId) {
   const maxPlayable = unlockedLevel(gameId, game.maxLevel);
   const bookList = BOOK_EXERCISES[gameId] || [];
 
-  // วอร์มตามหนังสือ: ทุก routine ปลดล็อก แสดงชื่อแทนตัวเลข
+  // วอร์มพื้นฐาน: ทุก routine ปลดล็อก แสดงชื่อแทนตัวเลข
   const levelButtons = gameId === 'warmup_routine'
     ? WARMUP_ROUTINES.map(r => {
         const stars = bestStars(gameId, r.level);
@@ -73,7 +73,7 @@ export async function openGame(gameId) {
     <p class="game-desc">${game.desc}</p>
     <div class="level-grid ${gameId === 'warmup_routine' ? 'routine-grid' : ''}">${levelButtons}</div>
     ${bookList.length ? `
-      <div class="section-title book-section-title">📖 แบบฝึกจากหนังสือ เสียงใหม่ฯ</div>
+      <div class="section-title book-section-title">📖 แบบฝึกจาก Blues Dot Music</div>
       <div class="book-list">
         ${bookList.map((ex, i) => {
           const lv = 101 + i;
@@ -98,7 +98,7 @@ export async function startRound(gameId, level) {
   const abort = new AbortController();
   activeAbort = abort;
 
-  // ด่านพิเศษจากหนังสือ (101+) / routine วอร์ม → ส่ง def เข้าโมดูลเกม
+  // ด่านพิเศษจากคลังแบบฝึก (101+) / routine วอร์ม → ส่ง def เข้าโมดูลเกม
   const exercise = level > 100 ? (BOOK_EXERCISES[gameId] || [])[level - 101] : null;
   const routine = gameId === 'warmup_routine' ? WARMUP_ROUTINES[level - 1] : null;
   const title = exercise ? `${BOOK.credit.slice(0, 2)} ${exercise.name}`

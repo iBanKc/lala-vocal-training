@@ -43,7 +43,7 @@ function makeMelody(cfg, voiceLow, voiceHigh) {
   return melody;
 }
 
-// ด่านพิเศษจากหนังสือ: pattern ตายตัว (สเกล 5 โน้ตไล่ลง) ขยับขึ้นครึ่งเสียงต่อรอบ + พยางค์กำกับ
+// ด่านพิเศษจากคลังแบบฝึก: pattern ตายตัว (สเกล 5 โน้ตไล่ลง) ขยับขึ้นครึ่งเสียงต่อรอบ + พยางค์กำกับ
 const PATTERNS = { scale5_desc: [7, 5, 4, 2, 0] };
 
 function exerciseMelody(exercise, voiceLow, voiceHigh) {

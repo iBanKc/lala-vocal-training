@@ -1,10 +1,10 @@
-// เนื้อหาแบบฝึกหัดจากหนังสือ "เสียงใหม่: ศิลปะการใช้เสียงและการร้องเพลงอย่างถูกต้อง"
-// curate จาก NotebookLM (notebook a211ad3a) — ไฟล์นี้เป็นแหล่งเดียว ใช้ทั้ง client และ api/
+// คลังแบบฝึกการร้องของโรงเรียน Blues Dot Music
+// ไฟล์นี้เป็นแหล่งเดียวของเนื้อหาแบบฝึก ใช้ทั้ง client และ api/
 // ห้ามใส่โค้ดที่พึ่ง browser/Node เฉพาะทาง (ต้อง import ได้ทั้งสองฝั่ง)
 
 export const BOOK = {
-  title: 'เสียงใหม่: ศิลปะการใช้เสียงและการร้องเพลงอย่างถูกต้อง',
-  credit: '📖 จากหนังสือ เสียงใหม่ฯ',
+  title: 'แบบฝึกการร้อง Blues Dot Music',
+  credit: '📖 แบบฝึกจาก Blues Dot Music',
 };
 
 // ── ด่านพิเศษในเกมเดิม: level ที่ส่งขึ้น server = 100 + (index ใน array) + 1 ──
@@ -77,7 +77,7 @@ export const BOOK_EXERCISES = {
   song_compare: [],
 };
 
-// ── การ์ดวอร์มตามหนังสือ (game_id: warmup_routine, level = ลำดับ) ──
+// ── การ์ดวอร์มพื้นฐาน (game_id: warmup_routine, level = ลำดับ) ──
 export const WARMUP_ROUTINES = [
   {
     level: 1,

@@ -12,7 +12,7 @@ export const MAX_LEVEL = {
   warmup_routine: WARMUP_ROUTINES.length,
 };
 
-// ด่านพิเศษจากหนังสือ: level = 101..100+จำนวนแบบฝึกของเกมนั้น (ปลดล็อกเสมอ)
+// ด่านพิเศษจากคลังแบบฝึก: level = 101..100+จำนวนแบบฝึกของเกมนั้น (ปลดล็อกเสมอ)
 export function isBookLevel(gameId, level) {
   return level > 100 && level <= 100 + bookExerciseCount(gameId);
 }
@@ -37,7 +37,7 @@ export function starsFromScore(score) {
 
 export function xpForRound(score, level, gameId) {
   if (gameId === 'warmup_routine') return Math.max(5, Math.round(score * 0.5)); // ไกด์จับเวลา — กัน grind
-  if (level > 100) return Math.max(5, Math.round(score * 1.3));                 // ด่านพิเศษจากหนังสือ
+  if (level > 100) return Math.max(5, Math.round(score * 1.3));                 // ด่านพิเศษจากคลังแบบฝึก
   const mult = gameId === 'song_compare' ? 2 : 1;
   return Math.max(5, Math.round(score * (1 + 0.15 * (level - 1)) * mult));
 }
