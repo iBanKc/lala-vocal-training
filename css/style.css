@@ -62,14 +62,15 @@ body {
 
 /* ── Header ────────────────────────────────────── */
 .header {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 10px;
   flex-shrink: 0;
   padding: clamp(8px, 1.5vh, 20px) 0 clamp(4px, 0.8vh, 10px);
 }
-.header-center { text-align: center; }
+.header-center { text-align: left; }
+.header-side { display: flex; align-items: center; gap: 8px; }
 .logo {
   font-size: clamp(1.3rem, 3.5vh, 2rem);
   font-weight: 700;
@@ -82,17 +83,14 @@ body {
   margin-top: 2px;
 }
 .brand-logo {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
   display: block;
+  flex-shrink: 0;
   width: clamp(48px, 8vh, 68px);
   height: clamp(48px, 8vh, 68px);
   text-decoration: none;
   transition: transform 0.2s, opacity 0.2s;
 }
-.brand-logo:hover { transform: translateY(-50%) scale(1.07); opacity: 0.85; }
+.brand-logo:hover { transform: scale(1.07); opacity: 0.85; }
 .brand-img { width: 100%; height: 100%; object-fit: contain; }
 
 /* ── Permission banner ─────────────────────────── */
@@ -619,17 +617,7 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .login-btn { width: 100%; margin-top: 6px; }
 .login-hint { color: var(--text2); font-size: 0.8rem; margin-top: 18px; }
 
-/* ══════════ Header user ══════════ */
-.header { position: relative; }
-.header-user {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+/* ══════════ Header user (teacher.html) ══════════ */
 .header-user-name {
   font-size: 0.78rem;
   color: var(--text2);
@@ -798,16 +786,33 @@ body:not(.auth-locked) .login-view { display: none !important; }
 .nm-roll-wrap { flex: 1; min-height: 160px; }
 .nm-roll { width: 100%; height: 100%; border-radius: var(--radius-sm); }
 .nm-hold {
-  height: 10px;
+  height: 24px;
   background: var(--bg3);
-  border-radius: 5px;
+  border-radius: 12px;
   overflow: hidden;
+  border: 1px solid var(--border);
 }
-.nm-hold-bar { height: 100%; background: var(--green); border-radius: 5px; transition: width 0.1s linear; }
-.nm-status { text-align: center; font-size: 1.05rem; font-weight: 600; min-height: 1.5em; }
-.fb-good { color: var(--green); }
-.fb-mid { color: var(--yellow); }
-.fb-bad { color: var(--red); }
+.nm-hold-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  border-radius: 12px;
+  transition: width 0.1s linear;
+}
+.nm-status { text-align: center; font-size: 1.5rem; font-weight: 700; min-height: 1.6em; }
+.nm-status span {
+  display: inline-block;
+  padding: 6px 20px;
+  border-radius: 24px;
+  animation: fbPop 0.35s ease;
+}
+@keyframes fbPop {
+  from { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.12); }
+  to { transform: scale(1); opacity: 1; }
+}
+.fb-good { color: var(--green); background: rgba(22,163,74,0.12); }
+.fb-mid { color: var(--yellow); background: rgba(202,138,4,0.12); }
+.fb-bad { color: var(--red); background: rgba(220,38,38,0.10); }
 
 /* score screen */
 .score-screen { text-align: center; padding: 16px 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
@@ -1093,3 +1098,37 @@ body:not(.auth-locked) .login-view { display: none !important; }
   pointer-events: none;
 }
 .snd-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ══════════ รอบ 6: แถวบัญชีในการ์ดสวัสดี + บัตรกลับเข้าเล่น ══════════ */
+.hub-account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.hub-account-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.hub-account-btns .logout-btn { text-decoration: none; }
+.hub-guest-row {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cred-box {
+  background: var(--bg3);
+  border: 1.5px dashed rgba(202,138,4,0.5);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 10px 0;
+}
+.cred-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+}
+.cred-row span { color: var(--text2); font-size: 0.85rem; }
+.cred-row strong { font-size: 1.4rem; letter-spacing: 1px; color: var(--accent); font-family: monospace; }

@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const rows = await sql`
-    SELECT id, username, display_name, role, xp, streak_days, last_practice_date,
+    SELECT id, username, display_name, role, is_guest, xp, streak_days, last_practice_date,
            voice_low_midi, voice_high_midi
     FROM users WHERE id = ${auth.userId} AND is_active
   `;

@@ -70,11 +70,11 @@ export class PianoRoll {
       const tolSemi = toleranceCents / 100;
       const yTop = this._y(midi + tolSemi, h);
       const yBot = this._y(midi - tolSemi, h);
-      ctx.fillStyle = 'rgba(22,163,74,0.16)';
+      ctx.fillStyle = 'rgba(22,163,74,0.22)';
       ctx.fillRect(0, yTop, w, yBot - yTop);
       const yC = this._y(midi, h);
-      ctx.strokeStyle = 'rgba(22,163,74,0.85)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(22,163,74,0.9)';
+      ctx.lineWidth = 3;
       ctx.setLineDash([6, 4]);
       ctx.beginPath(); ctx.moveTo(0, yC); ctx.lineTo(w, yC); ctx.stroke();
       ctx.setLineDash([]);
@@ -83,7 +83,7 @@ export class PianoRoll {
     // เส้น pitch สด (ตอนนี้ = ขอบขวา)
     if (this.trace.length >= 2) {
       const now = performance.now();
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 4.5;
       ctx.lineCap = 'round';
       let started = false;
       for (const pt of this.trace) {
@@ -101,7 +101,7 @@ export class PianoRoll {
       if (last && now - last.time < 200) {
         const y = this._y(last.midi, h);
         ctx.fillStyle = '#1976D2';
-        ctx.beginPath(); ctx.arc(w - ((now - last.time) / this.historyMs) * w, y, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(w - ((now - last.time) / this.historyMs) * w, y, 7, 0, Math.PI * 2); ctx.fill();
       }
     }
   }

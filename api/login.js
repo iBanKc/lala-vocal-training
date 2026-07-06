@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!username || !password) return res.status(400).json({ error: 'กรอกชื่อผู้ใช้และรหัสผ่าน' });
 
   const rows = await sql`
-    SELECT id, username, display_name, password_hash, role, xp, streak_days,
+    SELECT id, username, display_name, password_hash, role, is_guest, xp, streak_days,
            voice_low_midi, voice_high_midi
     FROM users
     WHERE username = ${String(username).toLowerCase().trim()} AND is_active
