@@ -1,25 +1,14 @@
-// เกมร้องเพลงเต็ม — 2 โหมด:
-//
-// 🎬 YouTube (ค่าเริ่มต้น): ผู้เล่นวางลิงก์เพลงที่อยากร้อง วิดีโอเล่นผ่าน YouTube IFrame
-//    Player อย่างเป็นทางการ + เนื้อเพลงคาราโอเกะ (LRC/ข้อความ) — YouTube ไม่ยอมให้อ่าน
-//    สตรีมเสียงจาก embed จึง "เทียบทำนองต้นฉบับ" ไม่ได้ → โหมดนี้ให้คะแนนจาก
-//    "ความตรงโน้ต + ความนิ่ง" ของเสียงผู้เล่นล้วน ๆ (intonation) ซึ่งวัดได้แม่น ±3¢
-//    (แนะนำหูฟัง — ไมค์จะได้ยินเฉพาะเสียงผู้เล่น)
-//
-// 🎙️ เพลงฝึกเสียง: เทียบต้นฉบับเต็มรูปแบบ (Compare v2 เดิม): เพลง+ไมค์บน clock เดียวกัน,
-//    octave-invariant fold ±600¢, DTW-lite ±3 เฟรม, latency compensation
+// เกมร้องเพลงเต็ม — ผู้เล่นวางลิงก์เพลงที่อยากร้อง วิดีโอเล่นผ่าน YouTube IFrame
+// Player อย่างเป็นทางการ + เนื้อเพลงคาราโอเกะ (LRC/ข้อความ) — YouTube ไม่ยอมให้อ่าน
+// สตรีมเสียงจาก embed จึง "เทียบทำนองต้นฉบับ" ไม่ได้ → ให้คะแนนจาก
+// "ความตรงโน้ต + ความนิ่ง" ของเสียงผู้เล่นล้วน ๆ (intonation) ซึ่งวัดได้แม่น ±3¢
+// (แนะนำหูฟัง — ไมค์จะได้ยินเฉพาะเสียงผู้เล่น)
 import {
-  MicSession, SegmentTracker, decodeAndAnalyse, foldCents, scoreFromCents,
-  freqToNoteInfo, midiToNoteName, NOTE_NAMES,
+  MicSession, SegmentTracker, scoreFromCents, freqToNoteInfo,
 } from '../pitch-engine.js';
 import { PianoRoll } from '../piano-roll.js';
 
-const HOP = 0.05;          // วินาทีต่อเฟรม ref (ตรงกับ analyseBuffer)
-const LATENCY = 0.12;      // ชดเชยความหน่วงปาก→ไมค์ (โหมดเทียบต้นฉบับ)
-const DTW_SPAN = 3;        // เทียบ ref เฟรม ±3
-const MIN_SING_SEC = 15;   // โหมด YouTube ต้องร้องรวมอย่างน้อยเท่านี้
-
-const cache = { builtin: null, builtinAudio: null };
+const MIN_SING_SEC = 15;   // ต้องร้องรวมอย่างน้อยเท่านี้
 
 // ── ฟังก์ชัน pure (มี unit test) ────────────────────────
 // ดึง video id จากลิงก์ YouTube ทุกรูปแบบหลัก — ไม่ใช่ลิงก์ YouTube → null
@@ -63,26 +52,9 @@ function loadYtApi() {
   return ytApiPromise;
 }
 
-async function loadBuiltin(statusEl) {
-  if (cache.builtin) return cache.builtin;
-  statusEl.textContent = '⏳ กำลังวิเคราะห์เพลงต้นฉบับ...';
-  const resp = await fetch('reference.mp3');
-  const buf = await resp.arrayBuffer();
-  cache.builtinAudio = buf.slice(0);
-  cache.builtin = await decodeAndAnalyse(buf);
-  statusEl.textContent = '✅ พร้อมร้องแล้ว';
-  return cache.builtin;
-}
-
 export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
   stage.innerHTML = `
     <div class="sc-setup" id="scSetup">
-      <div class="source-tabs">
-        <button class="source-tab active" id="scTabYt">🎬 YouTube</button>
-        <button class="source-tab" id="scTabBuiltin">🎙️ เพลงฝึกเสียง</button>
-      </div>
-
-      <!-- โหมด YouTube: เพลงของผู้เล่นเอง -->
       <div id="scYtPanel">
         <input id="scYtUrl" class="login-input" type="url" inputmode="url"
                placeholder="วางลิงก์เพลง YouTube เช่น https://youtu.be/..." />
@@ -92,21 +64,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
         <p class="return-info">🎧 <strong>ใส่หูฟัง</strong>เพื่อผลแม่นที่สุด · โหมดนี้วัด<strong>ความตรงโน้ตและความนิ่ง</strong>ของเสียงคุณ (ไม่เทียบทำนองต้นฉบับ — YouTube ไม่อนุญาตให้อ่านเสียงจากวิดีโอ)</p>
       </div>
 
-      <!-- โหมดเพลงฝึกเสียง: เทียบต้นฉบับ -->
-      <div id="scBuiltinPanel" class="hidden">
-        <div class="ref-track-card">
-          <div class="ref-track-info">
-            <div class="ref-track-icon">🎙️</div>
-            <div>
-              <div class="ref-track-name">5 Minute Vocal Warm Up</div>
-              <div class="ref-track-artist">เพลงฝึกเสียงของโรงเรียน — เทียบกับต้นฉบับเต็มรูปแบบ</div>
-            </div>
-          </div>
-        </div>
-        <p class="note-text">🎧 แนะนำให้ใส่หูฟัง เพื่อไม่ให้ไมค์จับเสียงเพลงแทนเสียงร้อง</p>
-      </div>
-
-      <div class="status-msg" id="scStatus"></div>
+      <div class="status-msg" id="scStatus">วางลิงก์เพลง YouTube ก่อนนะ</div>
       <button class="btn-start" id="scStart" disabled>🎤 เริ่มร้อง</button>
     </div>
 
@@ -130,27 +88,8 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
   const setupEl = el('scSetup'), playEl = el('scPlay');
   const noteEl = el('scNote'), instrEl = el('scInstruction');
 
-  let source = 'youtube';
   let ytPlayer = null;
   let ytVideoId = null;
-
-  // ── สลับแท็บ ──
-  const tabYt = el('scTabYt'), tabB = el('scTabBuiltin');
-  function setSource(s) {
-    source = s;
-    tabYt.classList.toggle('active', s === 'youtube');
-    tabB.classList.toggle('active', s === 'builtin');
-    el('scYtPanel').classList.toggle('hidden', s !== 'youtube');
-    el('scBuiltinPanel').classList.toggle('hidden', s !== 'builtin');
-    startBtn.disabled = s === 'youtube' ? !ytPlayer : !cache.builtin;
-    statusEl.textContent = s === 'youtube' && !ytPlayer ? 'วางลิงก์เพลง YouTube ก่อนนะ' : statusEl.textContent;
-  }
-  tabYt.addEventListener('click', () => setSource('youtube'));
-  tabB.addEventListener('click', () => {
-    setSource('builtin');
-    loadBuiltin(statusEl).then(() => { if (source === 'builtin') startBtn.disabled = false; })
-      .catch(() => { statusEl.textContent = '⚠️ โหลดเพลงต้นฉบับไม่สำเร็จ'; });
-  });
 
   // ── วางลิงก์ → สร้าง player ──
   async function buildPlayer(videoId) {
@@ -168,7 +107,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
     });
     ytVideoId = videoId;
     statusEl.textContent = '✅ วิดีโอพร้อม — ใส่หูฟังแล้วกดเริ่มร้องได้เลย';
-    if (source === 'youtube') startBtn.disabled = false;
+    startBtn.disabled = false;
   }
 
   el('scYtUrl').addEventListener('change', () => {
@@ -190,11 +129,8 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh }) {
   }).catch(() => null);
   if (signal.aborted) return null;
 
-  if (source === 'youtube') {
-    const lyrics = el('scLyricsIn').value;
-    return runYoutube({ stage, signal, voiceLow, voiceHigh, player: ytPlayer, videoId: ytVideoId, lyricsText: lyrics, el, setupEl, playEl, noteEl, instrEl });
-  }
-  return runBuiltin({ stage, signal, el, setupEl, playEl, noteEl, instrEl });
+  const lyrics = el('scLyricsIn').value;
+  return runYoutube({ stage, signal, voiceLow, voiceHigh, player: ytPlayer, videoId: ytVideoId, lyricsText: lyrics, el, setupEl, playEl, noteEl, instrEl });
 }
 
 // ═══════════ โหมด YouTube: วัด intonation ของเสียงผู้เล่น ═══════════
@@ -314,203 +250,6 @@ async function runYoutube({ stage, signal, voiceLow, voiceHigh, player, videoId,
       segments: scored.length,
       avg_dev_cents: Math.round(avgDev * 10) / 10,
       has_lyrics: !!(lrc || plain),
-    },
-  };
-}
-
-// ═══════════ โหมดเพลงฝึกเสียง: เทียบต้นฉบับ (Compare v2 เดิม) ═══════════
-async function runBuiltin({ stage, signal, el, setupEl, playEl, noteEl, instrEl }) {
-  const refFrames = cache.builtin;
-  const audioData = cache.builtinAudio;
-  if (!refFrames || !audioData) return null;
-
-  setupEl.classList.add('hidden');
-  playEl.classList.remove('hidden');
-
-  const canvas = el('scCanvas');
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = canvas.offsetWidth * dpr;
-  canvas.height = canvas.offsetHeight * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const W = canvas.offsetWidth, H = canvas.offsetHeight;
-
-  const refVoiced = refFrames.filter(f => f.midi !== null);
-  const refMidis = refVoiced.map(f => f.midi);
-  const refCenter = refMidis.length ? refMidis.reduce((a, b) => a + b) / refMidis.length : 60;
-  const viewLow = Math.min(...refMidis, refCenter - 6) - 2;
-  const viewHigh = Math.max(...refMidis, refCenter + 6) + 2;
-  const yOf = m => H - ((m - viewLow) / (viewHigh - viewLow)) * H;
-  const PX_PER_SEC = W / 6;
-  const NOW_X = W * 0.3;
-
-  const userTrace = [];
-
-  function draw(nowSec) {
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#f0f6ff';
-    ctx.fillRect(0, 0, W, H);
-    for (let m = Math.ceil(viewLow); m <= viewHigh; m++) {
-      if (m % 12 !== 0) continue;
-      const y = yOf(m);
-      ctx.strokeStyle = 'rgba(33,150,243,0.14)';
-      ctx.setLineDash([4, 6]);
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(74,101,133,0.5)';
-      ctx.font = '10px Inter, sans-serif';
-      ctx.fillText(NOTE_NAMES[0] + (Math.floor(m / 12) - 1), 4, y - 3);
-    }
-    ctx.strokeStyle = 'rgba(25,118,210,0.6)';
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    let started = false;
-    const i0 = Math.max(0, Math.floor((nowSec - 2) / HOP));
-    const i1 = Math.min(refFrames.length - 1, Math.ceil((nowSec + 4.5) / HOP));
-    for (let i = i0; i <= i1; i++) {
-      const f = refFrames[i];
-      if (f.midi === null) { started = false; continue; }
-      const x = NOW_X + (f.time - nowSec) * PX_PER_SEC;
-      const y = yOf(f.midi);
-      if (!started) { ctx.beginPath(); ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
-      if (started && (i === i1 || refFrames[i + 1]?.midi === null)) ctx.stroke();
-    }
-    ctx.strokeStyle = 'rgba(220,38,38,0.85)';
-    ctx.lineWidth = 2.5;
-    started = false;
-    for (const p of userTrace) {
-      if (p.t < nowSec - 2) continue;
-      if (p.midi === null) { started = false; continue; }
-      const x = NOW_X + (p.t - nowSec) * PX_PER_SEC;
-      const y = yOf(p.midi);
-      if (!started) { ctx.beginPath(); ctx.moveTo(x, y); started = true; }
-      else ctx.lineTo(x, y);
-    }
-    if (started) ctx.stroke();
-    ctx.strokeStyle = 'rgba(13,27,46,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(NOW_X, 0); ctx.lineTo(NOW_X, H); ctx.stroke();
-  }
-
-  const userBuckets = new Map();
-  let playStartPerf = null;
-  let srcNode = null;
-
-  const mic = new MicSession({
-    processed: true,
-    onStatus: s => {
-      if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
-    },
-    onFrame: frame => {
-      if (playStartPerf === null) return;
-      const songT = (frame.time - playStartPerf) / 1000 - LATENCY;
-      if (songT < 0) return;
-      if (frame.voiced) {
-        const b = Math.floor(songT / HOP);
-        if (!userBuckets.has(b)) userBuckets.set(b, []);
-        userBuckets.get(b).push(frame.midi);
-        const disp = frame.midi + 12 * Math.round((refCenter - frame.midi) / 12);
-        userTrace.push({ t: songT, midi: disp });
-        const info = freqToNoteInfo(frame.freq);
-        noteEl.textContent = `${info.note}${info.octave}`;
-      } else {
-        userTrace.push({ t: songT, midi: null });
-      }
-      while (userTrace.length && userTrace[0].t < songT - 3) userTrace.shift();
-      draw(songT);
-    },
-  });
-
-  if (signal.aborted) return null;
-  await mic.start();
-  const onAbort = () => { mic.stop(); try { srcNode?.stop(); } catch (_) {} };
-  signal.addEventListener('abort', onAbort);
-  const wait = ms => new Promise(r => setTimeout(r, ms));
-  while (mic.running && !mic.calibrated) {
-    if (signal.aborted) return null;
-    await wait(100);
-  }
-
-  instrEl.textContent = '🎵 เพลงกำลังเริ่ม ร้องตามเลย!';
-  const decoded = await mic.audioCtx.decodeAudioData(audioData.slice(0));
-  srcNode = mic.audioCtx.createBufferSource();
-  srcNode.buffer = decoded;
-  srcNode.connect(mic.audioCtx.destination);
-
-  const stopPromise = new Promise(resolve => {
-    el('scStop').addEventListener('click', resolve, { once: true });
-    srcNode.onended = resolve;
-    signal.addEventListener('abort', resolve, { once: true });
-  });
-
-  srcNode.start();
-  playStartPerf = performance.now();
-
-  await stopPromise;
-  try { srcNode.stop(); } catch (_) { /* จบไปแล้ว */ }
-  const sungSec = (performance.now() - playStartPerf) / 1000;
-  signal.removeEventListener('abort', onAbort);
-  mic.stop();
-  if (signal.aborted) return null;
-
-  let counted = 0, inTune = 0, slightOff = 0, off = 0, centsSum = 0, scoreSum = 0;
-  const mismatches = [];
-  for (const [b, midis] of [...userBuckets.entries()].sort((a, z) => a[0] - z[0])) {
-    const userMidi = midis.sort((x, y) => x - y)[midis.length >> 1];
-    let best = null;
-    let bestRef = null;
-    for (let j = Math.max(0, b - DTW_SPAN); j <= Math.min(refFrames.length - 1, b + DTW_SPAN); j++) {
-      const rf = refFrames[j];
-      if (rf.midi === null) continue;
-      const d = Math.abs(foldCents((userMidi - rf.midi) * 100));
-      if (best === null || d < best) { best = d; bestRef = rf; }
-    }
-    if (best === null) continue;
-    counted++;
-    centsSum += best;
-    scoreSum += scoreFromCents(best);
-    if (best <= 20) inTune++;
-    else if (best <= 50) slightOff++;
-    else {
-      off++;
-      mismatches.push({ time: b * HOP, refMidi: bestRef.midi, userMidi, cents: Math.round(best) });
-    }
-  }
-
-  if (counted < 60) {
-    return {
-      score: 0,
-      accuracy_pct: 0,
-      avg_cents_off: null,
-      details: { mode: 'builtin', sung_sec: Math.round(sungSec), counted, note: 'ร้องสั้นเกินไป' },
-    };
-  }
-
-  const score = scoreSum / counted;
-  const groups = [];
-  let g = null;
-  for (const m of mismatches) {
-    if (!g || m.time - g.end > 0.5) {
-      if (g) groups.push(g);
-      g = { start: m.time, end: m.time, ref: midiToNoteName(Math.round(m.refMidi)), cents: [m.cents] };
-    } else { g.end = m.time; g.cents.push(m.cents); }
-  }
-  if (g) groups.push(g);
-
-  return {
-    score,
-    accuracy_pct: (inTune / counted) * 100,
-    avg_cents_off: centsSum / counted,
-    details: {
-      mode: 'builtin',
-      song: 'builtin_warmup',
-      sung_sec: Math.round(sungSec),
-      in_tune: inTune, slight_off: slightOff, off,
-      worst_spots: groups.slice(0, 10).map(x => ({
-        at: Math.round(x.start), ref: x.ref,
-        avg_cents: Math.round(x.cents.reduce((a, b) => a + b) / x.cents.length),
-      })),
     },
   };
 }
