@@ -12,7 +12,7 @@ export const BADGE_INFO = {
   all_games:     { emoji: '🎪', name: 'ลองครบทุกเกม',    desc: 'เล่นครบทั้ง 5 เกม' },
   song_master:   { emoji: '🎤', name: 'นักร้องตัวจริง',   desc: 'ร้องเพลงเต็มได้ 80+' },
   sessions_50:   { emoji: '🎓', name: 'ขยันฝึก',         desc: 'ฝึกครบ 50 รอบ' },
-  hold_15:       { emoji: '🫁', name: 'ปอดเหล็ก',        desc: 'ลากเสียงนิ่งได้ 15 วินาที' },
+  hold_15:       { emoji: '🫁', name: 'ปอดเหล็ก',        desc: 'ลากเสียงนิ่งครบ 12 วินาที' },
   book_worm:     { emoji: '📖', name: 'ศิษย์เสียงใหม่',   desc: 'ฝึกครบทุกแบบฝึกจากหนังสือ เสียงใหม่ฯ' },
 };
 

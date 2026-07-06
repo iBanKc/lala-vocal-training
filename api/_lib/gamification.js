@@ -70,7 +70,8 @@ export const BADGES = {
   all_games:     ctx => ctx.distinctGames >= GAME_IDS.length,
   song_master:   ctx => ctx.gameId === 'song_compare' && ctx.score >= 80,
   sessions_50:   ctx => ctx.totalSessions >= 50,
-  hold_15:       ctx => ctx.gameId === 'note_hold' && (ctx.details?.held_sec ?? 0) >= 15,
+  // เกณฑ์ 12 วิ (เพดานความยาวใหม่ของเกมเสียงนิ่ง — เดิม 15 วิ เป็นไปไม่ได้แล้ว)
+  hold_15:       ctx => ctx.gameId === 'note_hold' && (ctx.details?.held_sec ?? 0) >= 12,
   book_worm:     ctx => ctx.bookPlayed >= BOOK_TOTAL,
 };
 

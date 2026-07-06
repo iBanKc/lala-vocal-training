@@ -7,7 +7,7 @@ import { BOOK, BOOK_EXERCISES, WARMUP_ROUTINES } from './curriculum.js';
 
 export const GAMES = {
   note_match:   { title: 'จับคู่โน้ต',   icon: '🎯', desc: 'ฟังโน้ตแล้วร้องตามให้ตรง', maxLevel: 10, available: true,  load: () => import('./games/note-match.js') },
-  note_hold:    { title: 'เสียงนิ่ง',    icon: '🧘', desc: 'ลากเสียงให้นิ่งและยาว',   maxLevel: 8,  available: true,  load: () => import('./games/note-hold.js') },
+  note_hold:    { title: 'เสียงนิ่ง',    icon: '🧘', desc: 'ลากเสียงให้นิ่ง — สูงขึ้น ยาวขึ้น ยากขึ้น', maxLevel: 8, available: true, load: () => import('./games/note-hold.js') },
   melody_echo:  { title: 'ร้องตามทำนอง', icon: '🦜', desc: 'ฟังทำนองแล้วร้องตาม',    maxLevel: 12, available: true,  load: () => import('./games/melody-echo.js') },
   pitch_glide:  { title: 'เสียงพาบิน',   icon: '🎈', desc: 'ใช้เสียงบังคับลูกโป่งลอดห่วง', maxLevel: 10, available: true,  load: () => import('./games/pitch-glide.js') },
   song_compare: { title: 'ร้องเพลงเต็ม', icon: '🎤', desc: 'ร้องทั้งเพลงเทียบต้นฉบับ',  maxLevel: 1,  available: true,  load: () => import('./games/song-compare.js') },

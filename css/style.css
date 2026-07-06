@@ -1254,3 +1254,12 @@ body:not(.auth-locked) .login-view { display: none !important; }
   50% { transform: scale(1.03); }
   100% { transform: scale(1); }
 }
+
+/* เกมเสียงนิ่ง: ตัวนับวินาที */
+.nh-seconds {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.nh-seconds span { font-size: 2.2rem; }

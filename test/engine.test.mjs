@@ -197,7 +197,54 @@ console.log('\n── 8. stepFreqBounds: ขอบเขตความถี่
   check(`ขั้น high (low=G3): floor ≈246.9 (ได้ ${highG3.fmin.toFixed(1)})`, Math.abs(highG3.fmin - 246.94) < 0.1);
 }
 
-console.log('\n── 9. utilities ──');
+console.log('\n── 9. เกมเสียงนิ่ง: ความยาก = สูง×ยาว, cap 12 วิ, สเกลจากหนังสือ ──');
+{
+  const { config, pickHoldNote, scaleNotes } = await import('../js/games/note-hold.js');
+  const LOW = 48, HIGH = 72; // C3–C5
+
+  // cap 12 วิ ทุก level
+  let maxTotal = 0;
+  for (let lv = 1; lv <= 8; lv++) {
+    const c = config(lv);
+    const total = c.scale ? c.holdPerNote * 5 : c.targetSec;
+    maxTotal = Math.max(maxTotal, total);
+  }
+  check(`เวลาร้องรวมทุก level ≤ 12 วิ (สูงสุด ${maxTotal})`, maxTotal <= 12);
+
+  // โน้ตเดียว: อยู่ในช่วงเสียงเสมอ + level สูง = โน้ตสูงขึ้น (เทียบค่าเฉลี่ยจากการสุ่มคุมได้)
+  const avgFor = lv => {
+    const c = config(lv);
+    let sum = 0;
+    for (let i = 0; i <= 20; i++) sum += pickHoldNote(c, LOW, HIGH, () => i / 20);
+    return sum / 21;
+  };
+  let inRange = true;
+  for (let lv = 1; lv <= 5; lv++) {
+    const c = config(lv);
+    for (let i = 0; i <= 10; i++) {
+      const m = pickHoldNote(c, LOW, HIGH, () => i / 10);
+      if (m < LOW + 1 || m > HIGH - 1) inRange = false;
+    }
+  }
+  check('pickHoldNote อยู่ใน [low+1, high-1] ทุก level', inRange);
+  const a1 = avgFor(1), a3 = avgFor(3), a5 = avgFor(5);
+  check(`level สูง = โน้ตสูงขึ้น (avg L1 ${a1.toFixed(1)} < L3 ${a3.toFixed(1)} < L5 ${a5.toFixed(1)})`, a1 < a3 && a3 < a5);
+
+  // สเกล 5 โน้ต: อยู่ในช่วง, L6/L8 ขึ้น, L7 ลง, ช่วงกว้าง 7 semitones (1→5 major)
+  for (const lv of [6, 7, 8]) {
+    const notes = scaleNotes(config(lv), LOW, HIGH);
+    const dir = notes[4] > notes[0] ? 'ขึ้น' : 'ลง';
+    const ok = notes.length === 5 &&
+      notes.every(m => m >= LOW + 1 && m <= HIGH - 1) &&
+      Math.abs(notes[4] - notes[0]) === 7 &&
+      (lv === 7 ? notes[4] < notes[0] : notes[4] > notes[0]);
+    check(`L${lv} สเกล ${notes.join('-')} (${dir})`, ok);
+  }
+  // tonic L8 สูงกว่า L6
+  check('tonic L8 สูงกว่า L6', scaleNotes(config(8), LOW, HIGH)[0] > scaleNotes(config(6), LOW, HIGH)[0]);
+}
+
+console.log('\n── 10. utilities ──');
 check('noteToFreq A4 = 440', Math.abs(noteToFreq('A', 4) - 440) < 0.01);
 check('freqToNoteInfo 452Hz = A4 +46.6¢', (() => { const i = freqToNoteInfo(452); return i.note === 'A' && i.octave === 4 && Math.abs(i.cents - 46.6) < 1; })());
 check('foldCents: ร้องต่ำ 1 อ็อกเทฟ = 0¢', foldCents(-1200) === 0);

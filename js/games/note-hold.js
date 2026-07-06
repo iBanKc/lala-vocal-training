@@ -1,61 +1,92 @@
-// เกมเสียงนิ่ง — ลากเสียงโน้ตเดียวให้นิ่งและยาว (ฝึกลมหายใจ + ความนิ่งของเสียง)
-// คะแนน = 70×(เวลาที่ค้างได้/เป้า) + โบนัสความนิ่ง (30 − stddev cents)
+// เกมเสียงนิ่ง — ลากเสียงให้นิ่ง (ฝึกลมหายใจ + ความนิ่งของเสียง)
+// ความยาก = ความสูงของโน้ต × ความยาวที่ต้องค้าง (สูงสุด 12 วิ)
+//   L1-5: โน้ตเดียว สุ่มตำแหน่งสูงขึ้นตาม level, ค้าง 4→12 วิ
+//   L6-8: สเกล 5 โน้ต ตามแบบฝึกหัดจากหนังสือ "เสียงใหม่ฯ" (L7 ไล่ลงแบบ Ng/Kah-kee-koh)
+// คะแนนต่อโน้ต = 70×(เวลาที่ค้างได้/เป้า) + โบนัสความนิ่ง (30 − stddev cents)
 import {
   MicSession, SegmentTracker, midiToFreq, midiToNoteName,
 } from '../pitch-engine.js';
-import { playNote } from '../tone.js';
+import { playNote, playMelody } from '../tone.js';
+import { PianoRoll } from '../piano-roll.js';
+import { BOOK } from '../curriculum.js';
 
-function config(level) {
-  const i = level - 1;
+export function config(level) {
+  if (level <= 5) {
+    const i = level - 1;
+    return {
+      scale: false,
+      targetSec: [4, 6, 8, 10, 12][i],                                     // cap 12 วิ
+      heightRange: [[0.05, 0.4], [0.15, 0.55], [0.3, 0.7], [0.45, 0.85], [0.6, 0.95]][i],
+      tolerance: [25, 25, 22, 20, 18][i],
+    };
+  }
+  const j = level - 6;
   return {
-    targetSec: [4, 5, 6, 8, 10, 12, 14, 15][i],
-    tolerance: [25, 25, 22, 22, 20, 18, 16, 15][i],
-    graceMs: 300, // หลุด tolerance ได้ไม่เกินนี้โดยไม่หยุดนับ
+    scale: true,
+    holdPerNote: [2.0, 2.2, 2.4][j],                                       // รวม 10/11/12 วิ
+    tolerance: [22, 20, 18][j],
+    tonicFrac: [0.35, 0.55, 0.75][j],
+    descending: level === 7,                                               // ไล่ลงตามหนังสือ
   };
+}
+
+// โน้ตเดียว: สุ่มความสูงในโซนของ level (สูงกว่า = ยากกว่า) — pure, ทดสอบได้
+export function pickHoldNote(cfg, low, high, rand = Math.random) {
+  const [a, b] = cfg.heightRange;
+  const frac = a + rand() * (b - a);
+  return Math.max(low + 1, Math.min(high - 1, Math.round(low + frac * (high - low))));
+}
+
+// สเกล 5 โน้ต major (1-2-3-4-5) จาก tonic ตามตำแหน่งของ level — pure, ทดสอบได้
+export function scaleNotes(cfg, low, high) {
+  const degrees = [0, 2, 4, 5, 7];
+  let tonic = Math.round(low + cfg.tonicFrac * (high - low));
+  tonic = Math.max(low + 1, Math.min(high - 1 - 7, tonic)); // ยอดสเกลไม่เกิน high-1
+  const notes = degrees.map(d => tonic + d);
+  return cfg.descending ? notes.reverse() : notes;
 }
 
 export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise }) {
   if (exercise?.mechanic === 'rms_envelope') return runCrescendo({ stage, signal, voiceLow, voiceHigh, exercise });
+
   const cfg = config(level);
-  // โน้ตกลาง ๆ ของช่วงเสียง (สุ่มในหนึ่งในสามตรงกลาง) — โน้ตสบายที่สุดสำหรับลากยาว
-  const third = Math.max(1, Math.round((voiceHigh - voiceLow) / 3));
-  const lo = voiceLow + third, hi = voiceHigh - third;
-  const target = lo >= hi ? Math.round((voiceLow + voiceHigh) / 2) : lo + Math.floor(Math.random() * (hi - lo + 1));
+  const targets = cfg.scale ? scaleNotes(cfg, voiceLow, voiceHigh) : [pickHoldNote(cfg, voiceLow, voiceHigh)];
+  const holdSec = cfg.scale ? cfg.holdPerNote : cfg.targetSec;
 
   stage.innerHTML = `
-    <div class="nh-wrap">
-      <div class="nm-note">${midiToNoteName(target)}</div>
+    <div class="nm-top">
+      ${cfg.scale ? `<div class="me-dots" id="nhDots">${targets.map((_, i) => `<span class="me-dot">${i + 1}</span>`).join('')}</div>` : ''}
+      <div class="nm-progress" id="nhProgress"></div>
+      <div class="nm-note" id="nhNote">—</div>
       <div class="nm-instruction" id="nhInstruction">เตรียมตัว...</div>
-      <div class="nh-ring-wrap">
-        <svg viewBox="0 0 120 120" class="nh-ring">
-          <circle cx="60" cy="60" r="52" fill="none" stroke="#e8f1ff" stroke-width="10"/>
-          <circle id="nhRingBar" cx="60" cy="60" r="52" fill="none" stroke="#16a34a" stroke-width="10"
-                  stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="326.7"
-                  transform="rotate(-90 60 60)"/>
-        </svg>
-        <div class="nh-ring-text"><span id="nhHeld">0.0</span><small>/ ${cfg.targetSec} วิ</small></div>
-      </div>
-      <div class="nh-wobble">
-        <span>ความนิ่ง</span>
-        <div class="nh-wobble-track"><div class="nh-wobble-bar" id="nhWobble"></div></div>
-      </div>
-      <div class="nm-status" id="nhStatus"></div>
-    </div>`;
+    </div>
+    <div class="nm-roll-wrap"><canvas id="nhRoll" class="nm-roll"></canvas></div>
+    <div class="nh-seconds"><span id="nhHeld">0.0</span> / ${holdSec} วิ</div>
+    <div class="nm-hold"><div class="nm-hold-bar" id="nhBar"></div></div>
+    <div class="nh-wobble">
+      <span>ความนิ่ง</span>
+      <div class="nh-wobble-track"><div class="nh-wobble-bar" id="nhWobble"></div></div>
+    </div>
+    <div class="nm-status" id="nhStatus"></div>
+    ${cfg.scale ? `<p class="login-hint">${BOOK.credit} — สเกล 5 โน้ต${cfg.descending ? 'ไล่ลง' : ''}</p>` : ''}`;
 
+  const dots = [...stage.querySelectorAll('.me-dot')];
+  const progEl = stage.querySelector('#nhProgress');
+  const noteEl = stage.querySelector('#nhNote');
   const instrEl = stage.querySelector('#nhInstruction');
-  const ringBar = stage.querySelector('#nhRingBar');
   const heldEl = stage.querySelector('#nhHeld');
+  const barEl = stage.querySelector('#nhBar');
   const wobbleEl = stage.querySelector('#nhWobble');
   const statusEl = stage.querySelector('#nhStatus');
-  const CIRC = 326.7;
+  const roll = new PianoRoll(stage.querySelector('#nhRoll'), { lowMidi: voiceLow, highMidi: voiceHigh, piano: true });
 
   let listening = false;
+  let current = null;
   let heldMs = 0;
-  let outMs = 0;         // เวลาต่อเนื่องที่หลุด tolerance
+  let noteDone = false;
   let lastTime = null;
-  let done = false;
-  const seg = new SegmentTracker({ minDurMs: 300 });
-  const recentMidis = []; // สำหรับ wobble meter (rolling stddev)
+  let seg = null;
+  const recentMidis = [];
 
   const mic = new MicSession({
     onStatus: s => {
@@ -63,19 +94,17 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       if (s === 'suspended') instrEl.textContent = '👆 แตะหน้าจอหนึ่งครั้งเพื่อเปิดไมค์ต่อ';
     },
     onFrame: frame => {
-      if (!listening || done) { lastTime = frame.time; return; }
+      roll.pushPitch(frame.voiced ? frame.midi : null);
+      roll.draw();
+      if (!listening || current === null) { lastTime = frame.time; return; }
+
       seg.push(frame);
       const dt = lastTime === null ? 0 : frame.time - lastTime;
       lastTime = frame.time;
 
       if (frame.voiced) {
-        const centsOff = Math.abs(frame.midi - target) * 100;
-        if (centsOff <= cfg.tolerance) {
-          outMs = 0;
-          heldMs += dt;
-        } else {
-          outMs += dt;
-        }
+        const centsOff = Math.abs(frame.midi - current) * 100;
+        if (centsOff <= cfg.tolerance) heldMs += dt;
         // wobble meter จาก rolling stddev 20 เฟรมล่าสุด
         recentMidis.push(frame.midi);
         if (recentMidis.length > 20) recentMidis.shift();
@@ -86,13 +115,10 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
           wobbleEl.style.width = pct + '%';
           wobbleEl.style.background = sd < 15 ? '#16a34a' : sd < 30 ? '#ca8a04' : '#dc2626';
         }
-      } else {
-        outMs += dt;
       }
-
       heldEl.textContent = (heldMs / 1000).toFixed(1);
-      ringBar.style.strokeDashoffset = CIRC * (1 - Math.min(1, heldMs / (cfg.targetSec * 1000)));
-      if (heldMs >= cfg.targetSec * 1000) done = true;
+      barEl.style.width = Math.min(100, (heldMs / (holdSec * 1000)) * 100) + '%';
+      if (heldMs >= holdSec * 1000) noteDone = true;
     },
   });
 
@@ -102,55 +128,107 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   signal.addEventListener('abort', onAbort);
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
+  const results = [];
   try {
     while (mic.running && !mic.calibrated) {
       if (signal.aborted) return null;
       await wait(100);
     }
 
-    instrEl.textContent = '👂 ฟังโน้ต...';
-    listening = false;
-    await playNote(midiToFreq(target), 1.2);
-    await wait(200);
-
-    instrEl.textContent = `🎤 ร้อง "อา" ค้างไว้ให้นิ่งที่สุด!`;
-    lastTime = null;
-    listening = true;
-
-    // จำกัดเวลารอบ: 3 เท่าของเป้า + 5 วิ
-    const t0 = performance.now();
-    const maxMs = cfg.targetSec * 3000 + 5000;
-    while (!done && performance.now() - t0 < maxMs) {
-      if (signal.aborted) return null;
-      await wait(80);
+    // โหมดสเกล: เล่นสเกลนำทั้งท่อนก่อน (call-and-response)
+    if (cfg.scale) {
+      instrEl.textContent = '👂 ฟังสเกลก่อน...';
+      await playMelody(targets, { noteDur: 0.5, gap: 0.08 });
+      await wait(300);
     }
-    listening = false;
+
+    for (let n = 0; n < targets.length; n++) {
+      if (signal.aborted) return null;
+      const target = targets[n];
+      current = null;
+
+      if (cfg.scale) {
+        dots.forEach((d, i) => d.classList.toggle('active', i === n));
+        progEl.textContent = `โน้ตที่ ${n + 1}/${targets.length}`;
+      }
+      noteEl.textContent = midiToNoteName(target);
+      roll.setTarget(target, cfg.tolerance);
+
+      // เล่นโน้ตนำ (สั้นลงในโหมดสเกล)
+      listening = false;
+      instrEl.textContent = '👂 ฟังโน้ต...';
+      await playNote(midiToFreq(target), cfg.scale ? 0.8 : 1.2);
+      await wait(200);
+
+      seg = new SegmentTracker({ minDurMs: 300 });
+      heldMs = 0;
+      noteDone = false;
+      lastTime = null;
+      heldEl.textContent = '0.0';
+      barEl.style.width = '0%';
+      current = target;
+      instrEl.textContent = `🎤 ร้อง "อา" ค้างให้นิ่ง ${holdSec} วิ!`;
+      listening = true;
+
+      const t0 = performance.now();
+      const maxMs = holdSec * 2500 + 4000;
+      while (!noteDone && performance.now() - t0 < maxMs) {
+        if (signal.aborted) return null;
+        await wait(80);
+      }
+      listening = false;
+      current = null;
+
+      const live = seg.liveStats(target);
+      const ended = seg.end();
+      const st = live && live.durMs >= 300 ? live : (ended ? ended.stats(target) : null);
+      const heldDone = heldMs / 1000;
+      const stddev = st ? st.stddevCents : 100;
+      const noteScore = Math.max(0, Math.min(100,
+        70 * Math.min(heldDone / holdSec, 1) + Math.max(0, 30 - stddev)));
+
+      results.push({
+        midi: target,
+        held_sec: Math.round(heldDone * 10) / 10,
+        stddev_cents: Math.round(stddev * 10) / 10,
+        mean_abs_cents: st ? Math.round(st.meanAbsCents * 10) / 10 : null,
+        score: Math.round(noteScore),
+      });
+
+      if (cfg.scale) {
+        dots[n].classList.remove('active');
+        dots[n].classList.add(noteScore >= 70 ? 'good' : noteScore > 0 ? 'mid' : 'bad');
+      }
+      statusEl.innerHTML = noteDone
+        ? '<span class="fb-good">✓ ครบเวลา!</span>'
+        : `<span class="fb-mid">ได้ ${heldDone.toFixed(1)} วิ</span>`;
+      roll.setTarget(null, 0);
+      await wait(cfg.scale ? 800 : 1100);
+      statusEl.textContent = '';
+    }
   } finally {
     signal.removeEventListener('abort', onAbort);
     mic.stop();
   }
 
-  const live = seg.liveStats(target);
-  const ended = seg.end();
-  const st = live && live.durMs >= 300 ? live : (ended ? ended.stats(target) : null);
-
-  const heldSec = heldMs / 1000;
-  const stddev = st ? st.stddevCents : 100;
-  const score = Math.max(0, Math.min(100,
-    70 * Math.min(heldSec / cfg.targetSec, 1) + Math.max(0, 30 - stddev)));
-
-  statusEl.innerHTML = done ? '<span class="fb-good">✓ ครบเวลา!</span>' : '<span class="fb-mid">หมดเวลา</span>';
-
+  const score = results.reduce((a, r) => a + r.score, 0) / results.length;
+  const withCents = results.filter(r => r.mean_abs_cents !== null);
   return {
     score,
-    accuracy_pct: st ? Math.max(0, 100 - st.meanAbsCents) : 0,
-    avg_cents_off: st ? Math.abs(st.centsOff) : null,
-    details: {
-      target_midi: target,
-      held_sec: Math.round(heldSec * 10) / 10,
-      stddev_cents: Math.round(stddev * 10) / 10,
-      target_sec: cfg.targetSec,
-    },
+    accuracy_pct: withCents.length
+      ? withCents.reduce((a, r) => a + Math.max(0, 100 - r.mean_abs_cents), 0) / withCents.length
+      : 0,
+    avg_cents_off: withCents.length
+      ? withCents.reduce((a, r) => a + r.mean_abs_cents, 0) / withCents.length
+      : null,
+    details: cfg.scale
+      ? { scale: targets, per_note: results, book_scale: true, hold_per_note: cfg.holdPerNote }
+      : {
+          target_midi: targets[0],
+          held_sec: results[0].held_sec,
+          stddev_cents: results[0].stddev_cents,
+          target_sec: cfg.targetSec,
+        },
   };
 }
 
@@ -187,7 +265,7 @@ async function runCrescendo({ stage, signal, voiceLow, voiceHigh, exercise }) {
 
   let listening = false;
   let t0 = null;
-  const samples = []; // {t(0..1), rms, midi|null}
+  const samples = []; // {u(0..1), rms, midi|null}
 
   const mic = new MicSession({
     onStatus: s => {
@@ -241,7 +319,6 @@ async function runCrescendo({ stage, signal, voiceLow, voiceHigh, exercise }) {
   const pitchScore = voiced.length >= 20 ? 60 * (inTol / voiced.length) : 0;
 
   // ── คะแนน envelope (40): peak อยู่ช่วงกลาง + หัวท้ายเบากว่า peak ชัดเจน ──
-  // smooth RMS ด้วย moving average 7 จุด
   const rms = samples.map(s => s.rms);
   const sm = rms.map((_, i) => {
     const a = rms.slice(Math.max(0, i - 3), i + 4);
