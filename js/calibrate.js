@@ -103,7 +103,7 @@ export function runCalibration() {
     overlay.innerHTML = `
       <div class="overlay-card">
         <h2 id="calTitle">🎙️ วัดช่วงเสียงของคุณ</h2>
-        <p id="calHint" class="cal-hint">ระบบจะใช้ช่วงเสียงนี้เลือกโน้ตที่เหมาะกับคุณในทุกเกม</p>
+        <p id="calHint" class="cal-hint">ระบบจะใช้ช่วงเสียงนี้เลือกโน้ตที่เหมาะกับคุณในทุกเกม และเป็นการทดสอบไมค์ไปในตัว</p>
         <div class="cal-note" id="calNote">—</div>
         <div class="cal-vu"><div class="cal-vu-bar" id="calVu"></div></div>
         <div class="cal-progress"><div class="cal-progress-bar" id="calBar"></div></div>

@@ -4,6 +4,7 @@
 // การให้คะแนน: ต่อ stable segment (ตัด onset ทิ้ง, ใช้ median) ไม่ใช่ต่อเฟรม
 
 import { PitchDetector } from './vendor/pitchy.mjs';
+import { setSharedContext, clearSharedContext } from './audio-ctx.js';
 
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -249,6 +250,8 @@ export class MicSession {
     this._calibrateRms = [];
     this._calibrateStart = performance.now();
     this.running = true;
+    // ให้เสียงนำ (tone.js) เล่นผ่าน context นี้ — สร้างใน gesture แล้ว iOS ยอมให้เสียงออก
+    setSharedContext(this.audioCtx);
     this._requestWakeLock();
     document.addEventListener('visibilitychange', this._onVis);
     if (this.onStatus) this.onStatus('calibrating');
@@ -329,6 +332,7 @@ export class MicSession {
     this.running = false;
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this.stream) this.stream.getTracks().forEach(t => t.stop());
+    clearSharedContext(this.audioCtx);
     if (this.audioCtx && this.audioCtx.state !== 'closed') this.audioCtx.close();
     document.removeEventListener('visibilitychange', this._onVis);
     this._releaseWakeLock();

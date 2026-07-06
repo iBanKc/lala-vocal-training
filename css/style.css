@@ -1072,3 +1072,24 @@ body:not(.auth-locked) .login-view { display: none !important; }
   margin-top: 6px;
   text-align: left;
 }
+
+/* รอบ 5: hint ไมค์บน hub + toast โหมดเงียบ iOS */
+.hub-range-hint { font-size: 0.72rem; color: var(--text2); margin-top: 4px; }
+.snd-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--nav-h) + 18px);
+  transform: translate(-50%, 20px);
+  background: rgba(13,27,46,0.92);
+  color: #fff;
+  font-size: 0.82rem;
+  padding: 10px 16px;
+  border-radius: 22px;
+  max-width: 90%;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 200;
+  pointer-events: none;
+}
+.snd-toast.show { opacity: 1; transform: translate(-50%, 0); }

@@ -94,6 +94,28 @@
 
     await testAnalyseBuffer();
 
+    // 3. เสียงนำสังเคราะห์ (voice-synth) ต้อง pitch ตรงภายใน ±5¢ ทุกโน้ต/สระ
+    // (เสียงนำเพี้ยนไม่ได้เด็ดขาด — นักเรียนเลียนเสียงนี้)
+    const { playVoiceNote } = await import('../js/voice-synth.js');
+    async function testVoicePitch() {
+      for (const [name, freq] of [['C3', 130.81], ['A3', 220], ['A4', 440], ['E5', 659.26]]) {
+        for (const vowel of ['ah', 'oo']) {
+          const sr = 44100;
+          const off = new OfflineAudioContext(1, Math.ceil(sr * 1.1), sr);
+          playVoiceNote(off, { freq, durSec: 1.0, vowel, gain: 1, vibratoCents: 0, destination: off.destination });
+          const buf = await off.startRendering();
+          // วัดช่วงกลางเสียง (พ้น attack)
+          const win = new Float32Array(4096);
+          buf.copyFromChannel(win, 0, Math.floor(sr * 0.4));
+          const { freq: got, clarity } = detectFreq(win, sr);
+          const errCents = 1200 * Math.log2(got / freq);
+          report(`voice "${vowel}" ${name}`, Math.abs(errCents) <= 5 && clarity >= 0.85,
+            `err ${errCents.toFixed(2)}¢ clarity ${clarity.toFixed(2)}`);
+        }
+      }
+    }
+    await testVoicePitch();
+
     summary.textContent = `ผล: ${pass} ผ่าน, ${fail} ไม่ผ่าน`;
     summary.className = fail ? 'fail' : 'pass';
     window.__testResult = { pass, fail };

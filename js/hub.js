@@ -27,6 +27,7 @@ function render() {
       <div class="xp-bar"><div class="xp-bar-fill" style="width:${xpPct}%"></div></div>
       <div class="xp-text">${u.xp_this_level} / ${u.xp_next_level} XP สู่ระดับ ${u.level + 1}</div>
       <button class="hub-range-btn" id="hubRangeBtn">🎙️ ช่วงเสียง: ${range}</button>
+      <div class="hub-range-hint">การวัดช่วงเสียงยังเป็นการทดสอบว่าไมค์ของเครื่องใช้งานได้ 🎤</div>
     </section>
 
     <section class="hub-games">

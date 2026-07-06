@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>เสียงนำ — หน้าฟังจูนเสียง (dev only)</title>
+  <style>
+    body { font-family: -apple-system, Sarabun, sans-serif; margin: 20px; background: #f0f6ff; color: #0d1b2e; }
+    h1 { font-size: 1.1rem; }
+    .row { margin: 14px 0; }
+    .row-label { font-weight: 700; font-size: 0.9rem; margin-bottom: 6px; }
+    button {
+      font-family: inherit; font-size: 0.95rem; padding: 12px 14px; margin: 3px;
+      border: 1.5px solid rgba(33,150,243,0.3); border-radius: 10px;
+      background: #fff; cursor: pointer;
+    }
+    button:active { background: #dbeafe; }
+    .gain { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+    input[type=range] { flex: 1; }
+    small { color: #4a6585; }
+  </style>
+</head>
+<body>
+  <h1>🎙️ เสียงนำ — ฟังเทียบ / จูนความดัง</h1>
+  <small>กดปุ่มเพื่อฟัง (ต้องแตะปุ่มเอง — iOS ต้องการ gesture) · ปิดโหมดเงียบบน iPhone ก่อน</small>
+
+  <div class="row"><div class="row-label">เสียงคน "อา" (default ของเกม)</div><div id="rowAh"></div></div>
+  <div class="row"><div class="row-label">เสียงคน "อู"</div><div id="rowOo"></div></div>
+  <div class="row"><div class="row-label">เสียงบี๊บเดิม (เทียบ)</div><div id="rowSine"></div></div>
+  <div class="row"><div class="row-label">ทำนองสเกล 5 โน้ต (แบบที่เกมใช้)</div>
+    <button id="melodyBtn">🦜 เล่นทำนอง C4→G4→C4</button>
+  </div>
+
+  <div class="gain">
+    <span>ความดังรวม</span>
+    <input type="range" id="gainSlider" min="0.2" max="2" step="0.1" value="1.0" />
+    <span id="gainVal">1.0</span>
+  </div>
+
+  <script type="module">
+    import { playNote, playMelody, setMasterGain } from '../js/tone.js';
+    import { noteToFreq } from '../js/pitch-engine.js';
+
+    const NOTES = [['C3', 'C', 3], ['G3', 'G', 3], ['C4', 'C', 4], ['G4', 'G', 4], ['C5', 'C', 5], ['E5', 'E', 5]];
+
+    function makeRow(el, opts) {
+      for (const [label, n, o] of NOTES) {
+        const b = document.createElement('button');
+        b.textContent = label;
+        b.addEventListener('click', () => playNote(noteToFreq(n, o), 1.4, opts));
+        el.appendChild(b);
+      }
+    }
+    makeRow(document.getElementById('rowAh'), { instrument: 'voice', vowel: 'ah' });
+    makeRow(document.getElementById('rowOo'), { instrument: 'voice', vowel: 'oo' });
+    makeRow(document.getElementById('rowSine'), { instrument: 'sine' });
+
+    document.getElementById('melodyBtn').addEventListener('click', () =>
+      playMelody([60, 62, 64, 65, 67, 65, 64, 62, 60], { noteDur: 0.45, gap: 0.08 }));
+
+    const slider = document.getElementById('gainSlider');
+    slider.addEventListener('input', () => {
+      setMasterGain(Number(slider.value));
+      document.getElementById('gainVal').textContent = slider.value;
+    });
+  </script>
+</body>
+</html>
