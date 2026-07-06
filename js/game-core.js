@@ -62,6 +62,7 @@ export async function openGame(gameId) {
 
   // เกมด่านเดียว (เช่น ร้องเพลงเต็ม): เข้าเล่นทันที ไม่ผ่านหน้าเลือกด่าน
   if (game.maxLevel === 1) {
+    showPage('pageGame');
     startRound(gameId, 1);
     return;
   }
