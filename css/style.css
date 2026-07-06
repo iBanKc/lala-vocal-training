@@ -906,15 +906,24 @@ body:not(.auth-locked) .login-view { display: none !important; }
 /* ══════════ melody-echo ══════════ */
 .me-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; }
 .me-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  background: var(--bg3); border: 1.5px solid var(--border);
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--bg3); border: 2px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--text2);
   transition: transform 0.15s ease, background 0.15s ease;
 }
-.me-dot.playing { background: var(--accent2); transform: scale(1.35); }
-.me-dot.active { border-color: var(--accent); transform: scale(1.25); }
-.me-dot.good { background: var(--green); }
-.me-dot.mid { background: var(--yellow); }
-.me-dot.bad { background: var(--red); }
+.me-dot.playing { background: var(--accent2); color: #fff; transform: scale(1.3); }
+.me-dot.active {
+  border-color: var(--accent); color: var(--accent);
+  animation: dotPulse 0.9s ease infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1.15); box-shadow: 0 0 0 0 rgba(33,150,243,0.4); }
+  50% { transform: scale(1.3); box-shadow: 0 0 0 7px rgba(33,150,243,0); }
+}
+.me-dot.good { background: var(--green); color: #fff; border-color: var(--green); }
+.me-dot.mid { background: var(--yellow); color: #fff; border-color: var(--yellow); }
+.me-dot.bad { background: var(--red); color: #fff; border-color: var(--red); }
 .me-actions { display: flex; justify-content: center; }
 
 /* ══════════ pitch-glide ══════════ */
@@ -1214,4 +1223,34 @@ body:not(.auth-locked) .login-view { display: none !important; }
   font-weight: 700;
   color: var(--accent);
   line-height: 1.1;
+}
+
+/* ══════════ melody-echo รอบ 9: การ์ดวิธีเล่น + แถบบอกเฟส ══════════ */
+.me-intro h2 { color: var(--accent); font-size: 1.2rem; }
+.me-steps {
+  text-align: left;
+  margin: 12px 0 16px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.me-game { display: flex; flex-direction: column; gap: var(--gap); flex: 1; min-height: 0; }
+
+.phase-banner {
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+.phase-banner.listen { background: #dbeafe; color: var(--accent); }
+.phase-banner.sing { background: var(--green); color: #fff; }
+.phase-banner.pulse { animation: phasePulse 0.6s ease; }
+@keyframes phasePulse {
+  0% { transform: scale(0.96); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
 }

@@ -64,7 +64,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   const progEl = stage.querySelector('#nmProgress');
   const holdBar = stage.querySelector('#nmHoldBar');
   const statusEl = stage.querySelector('#nmStatus');
-  const roll = new PianoRoll(stage.querySelector('#nmRoll'), { lowMidi: voiceLow, highMidi: voiceHigh });
+  const roll = new PianoRoll(stage.querySelector('#nmRoll'), { lowMidi: voiceLow, highMidi: voiceHigh, piano: true });
 
   let listening = false;
   let segTracker = null;

@@ -1,5 +1,9 @@
 // เกมร้องตามทำนอง — ฟังทำนองสั้น ๆ แล้วร้องตามทีละโน้ต (ฝึกหูดนตรี / interval)
 // ต่อโน้ต: ถูก semitone (±50¢) = 100 − clamp(|cents|−20, 0, 50), ผิดโน้ต = 0
+//
+// UX (จาก feedback เจ้าของ: ผู้เล่นสับสนว่าต้องทำอะไร):
+//   การ์ดวิธีเล่นก่อนเริ่ม → แถบบอกเฟส ฟัง(น้ำเงิน)/ร้อง(เขียว) → จุดโน้ตมีเลขกำกับ
+//   → ชื่อโน้ตแสดงเสมอ + คีย์เปียโนขวา (PianoRoll piano:true) → กระตุ้นเมื่อผู้เล่นเงียบ
 import {
   MicSession, SegmentTracker, midiToFreq, midiToNoteName,
 } from '../pitch-engine.js';
@@ -46,7 +50,6 @@ function exerciseMelody(exercise, voiceLow, voiceHigh) {
   const offsets = PATTERNS[exercise.pattern] || PATTERNS.scale5_desc;
   const center = Math.round((voiceLow + voiceHigh) / 2);
   const span = Math.max(...offsets);
-  // ให้ยอดสเกลของ key สุดท้ายไม่เกินขอบบนช่วงเสียง
   const tonic0 = Math.max(voiceLow + 1, Math.min(center - 4, voiceHigh - 1 - span - (exercise.keys - 1)));
   const notes = [];
   for (let k = 0; k < exercise.keys; k++) {
@@ -60,39 +63,78 @@ function exerciseMelody(exercise, voiceLow, voiceHigh) {
 export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise }) {
   const cfg = exercise
     ? {
-        notes: 0, // ไม่ใช้ (melody มาจาก pattern)
         windowMs: 5000,
         staccato: !!exercise.staccato,
-        judgeDurMs: exercise.staccato ? 250 : 400, // โน้ตตัดเสียงร้องสั้น
+        judgeDurMs: exercise.staccato ? 250 : 400,
         noteDur: exercise.staccato ? 0.32 : 60 / (exercise.tempo || 90) * 0.9,
       }
     : { ...config(level), staccato: false, judgeDurMs: 400, noteDur: 0.55 };
 
   const melodyNotes = exercise
     ? exerciseMelody(exercise, voiceLow, voiceHigh)
-    : makeMelody(cfg, voiceLow, voiceHigh).map(m => ({ midi: m, syllable: null }));
+    : makeMelody(config(level), voiceLow, voiceHigh).map(m => ({ midi: m, syllable: null }));
   const melody = melodyNotes.map(n => n.midi);
+  const unitWord = exercise?.syllables ? 'พยางค์' : 'โน้ต';
 
+  // ── การ์ดวิธีเล่น (ปุ่มเริ่ม = gesture สดสำหรับ iOS ด้วย) ──
   stage.innerHTML = `
-    <div class="nm-top">
-      <div class="me-dots" id="meDots">
-        ${melody.map(() => '<span class="me-dot"></span>').join('')}
+    <div class="wr-card me-intro" id="meIntro">
+      <h2>🦜 วิธีเล่น "ร้องตามทำนอง"</h2>
+      <ol class="me-steps">
+        <li><strong>👂 ฟังทำนองจนจบ</strong> — ยังไม่ต้องร้อง</li>
+        <li><strong>🎤 ถึงตาคุณ</strong> — ร้องตาม "ทีละ${unitWord}" ตามจุดตัวเลขที่กะพริบ</li>
+        <li>ร้องถูก จุดเปลี่ยนเป็น<span style="color:var(--green);font-weight:700">สีเขียว</span> แล้วเลื่อนไป${unitWord}ถัดไป</li>
+      </ol>
+      <button class="btn-start" id="meStart">▶ เริ่มเลย (${melody.length} ${unitWord})</button>
+    </div>
+    <div class="me-game hidden" id="meGame">
+      <div class="phase-banner listen" id="mePhase">👂 ขั้นที่ 1/2 — ฟังทำนอง (ยังไม่ต้องร้อง)</div>
+      <div class="nm-top">
+        <div class="me-dots" id="meDots">
+          ${melody.map((_, i) => `<span class="me-dot">${i + 1}</span>`).join('')}
+        </div>
+        <div class="nm-note" id="meNote">—</div>
+        <div class="nm-instruction" id="meInstruction">เตรียมตัว...</div>
       </div>
-      <div class="nm-note" id="meNote">🦜</div>
-      <div class="nm-instruction" id="meInstruction">เตรียมตัว...</div>
-    </div>
-    <div class="nm-roll-wrap"><canvas id="meRoll" class="nm-roll"></canvas></div>
-    <div class="me-actions">
-      <button class="btn-secondary" id="meReplay">🔁 ฟังซ้ำ (−5 คะแนน)</button>
-    </div>
-    <div class="nm-status" id="meStatus"></div>`;
+      <div class="nm-roll-wrap"><canvas id="meRoll" class="nm-roll"></canvas></div>
+      <div class="me-actions">
+        <button class="btn-secondary" id="meReplay" disabled>🔁 ขอฟังทำนองอีกครั้ง (−5 คะแนน)</button>
+      </div>
+      <div class="nm-status" id="meStatus"></div>
+    </div>`;
+
+  // รอผู้เล่นกด "เริ่มเลย"
+  await new Promise((res, rej) => {
+    stage.querySelector('#meStart').addEventListener('click', res, { once: true });
+    signal.addEventListener('abort', () => rej(new Error('aborted')), { once: true });
+  }).catch(() => null);
+  if (signal.aborted) return null;
+  stage.querySelector('#meIntro').classList.add('hidden');
+  stage.querySelector('#meGame').classList.remove('hidden');
 
   const dots = [...stage.querySelectorAll('.me-dot')];
+  const phaseEl = stage.querySelector('#mePhase');
   const noteEl = stage.querySelector('#meNote');
   const instrEl = stage.querySelector('#meInstruction');
   const statusEl = stage.querySelector('#meStatus');
   const replayBtn = stage.querySelector('#meReplay');
-  const roll = new PianoRoll(stage.querySelector('#meRoll'), { lowMidi: voiceLow, highMidi: voiceHigh });
+  const roll = new PianoRoll(stage.querySelector('#meRoll'), { lowMidi: voiceLow, highMidi: voiceHigh, piano: true });
+
+  // แถบบอกเฟส: ฟัง (น้ำเงิน) / ร้อง (เขียว) — pulse ทุกครั้งที่สลับ
+  function setPhase(p) {
+    phaseEl.className = 'phase-banner ' + p;
+    phaseEl.textContent = p === 'listen'
+      ? '👂 ขั้นที่ 1/2 — ฟังทำนอง (ยังไม่ต้องร้อง)'
+      : `🎤 ขั้นที่ 2/2 — ตาคุณแล้ว! ร้องตามทีละ${unitWord}`;
+    phaseEl.classList.remove('pulse');
+    void phaseEl.offsetWidth; // restart animation
+    phaseEl.classList.add('pulse');
+  }
+
+  const noteLabel = n => {
+    const name = midiToNoteName(melody[n]);
+    return melodyNotes[n].syllable ? `${melodyNotes[n].syllable} · ${name}` : `🎯 ${name}`;
+  };
 
   let listening = false;
   let seg = null;
@@ -116,20 +158,27 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   signal.addEventListener('abort', onAbort);
   const wait = ms => new Promise(r => setTimeout(r, ms));
 
+  // เล่นทำนองทั้งท่อน (ช่วงฟัง — ปุ่มฟังซ้ำปิด, เป้าบนหน้าจอวิ่งตามโน้ตที่เล่น)
   async function playAll() {
     listening = false;
-    instrEl.textContent = '👂 ฟังทำนองให้ดี...';
+    replayBtn.disabled = true;
+    setPhase('listen');
     for (let i = 0; i < melody.length; i++) {
-      dots[i].classList.add('playing');
-      if (melodyNotes[i].syllable) noteEl.textContent = melodyNotes[i].syllable;
+      dots.forEach((d, j) => d.classList.toggle('playing', j === i));
+      noteEl.textContent = noteLabel(i);
+      roll.setTarget(melody[i], 50);
+      instrEl.textContent = `กำลังเล่น${unitWord}ที่ ${i + 1}/${melody.length}...`;
       await playMelody([melody[i]], { noteDur: cfg.noteDur, gap: cfg.staccato ? 0.15 : 0.1 });
       dots[i].classList.remove('playing');
     }
+    roll.setTarget(null, 0);
     await wait(250);
   }
 
   let replayRequested = false;
-  replayBtn.addEventListener('click', () => { replayRequested = true; });
+  replayBtn.addEventListener('click', () => {
+    if (!replayBtn.disabled) replayRequested = true;
+  });
 
   const results = [];
   try {
@@ -140,6 +189,13 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
 
     await playAll();
 
+    // คั่นจังหวะ "ตาคุณแล้ว!" ให้เห็นชัดก่อนเริ่มร้อง
+    setPhase('sing');
+    statusEl.innerHTML = '<span class="fb-good">ตาคุณแล้ว! 🎤</span>';
+    replayBtn.disabled = false;
+    await wait(900);
+    statusEl.textContent = '';
+
     for (let n = 0; n < melody.length; n++) {
       if (signal.aborted) return null;
       const target = melody[n];
@@ -148,27 +204,37 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
         replayRequested = false;
         replays++;
         await playAll();
+        setPhase('sing');
+        replayBtn.disabled = false;
       }
 
       dots.forEach((d, i) => d.classList.toggle('active', i === n));
       const syl = melodyNotes[n].syllable;
-      instrEl.textContent = syl ? `🎤 ร้อง "${syl}" (โน้ต ${n + 1}/${melody.length})` : `🎤 ร้องโน้ตที่ ${n + 1}/${melody.length}`;
-      noteEl.textContent = syl || '♪';
+      instrEl.textContent = syl
+        ? `🎤 ร้อง "${syl}" (${unitWord}ที่ ${n + 1}/${melody.length})`
+        : `🎤 ร้อง${unitWord}ที่ ${n + 1}/${melody.length} — นึกเสียงในใจแล้วร้องออกมา`;
+      noteEl.textContent = noteLabel(n);
       roll.setTarget(target, 50);
 
       seg = new SegmentTracker({ minDurMs: Math.min(250, cfg.judgeDurMs) });
       listening = true;
 
-      // ตัดสินเมื่อได้ segment นิ่งพอ (โน้ต staccato สั้นกว่าปกติ) หรือหมดเวลา
+      // ตัดสินเมื่อได้ segment นิ่งพอ หรือหมดเวลา — เงียบเกิน 2.5 วิ มีกระตุ้น
       const t0 = performance.now();
       let judged = null;
+      let nudged = false;
       while (performance.now() - t0 < cfg.windowMs) {
         if (signal.aborted) return null;
         await wait(60);
         const live = seg.liveStats(target);
         if (live && live.durMs >= cfg.judgeDurMs && live.stddevCents < 60) { judged = live; break; }
+        if (!live && !nudged && performance.now() - t0 > 2500) {
+          nudged = true;
+          statusEl.innerHTML = '<span class="fb-mid">ร้องได้เลย ระบบกำลังฟังอยู่ 🎤</span>';
+        }
       }
       listening = false;
+      if (nudged) statusEl.textContent = '';
       if (!judged) {
         const live = seg.liveStats(target);
         const ended = seg.end();
