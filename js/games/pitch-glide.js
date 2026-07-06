@@ -3,6 +3,7 @@
 // คะแนน = 80×(ห่วงที่ลอดได้/ทั้งหมด) + 20×ความลื่นไหลช่วง glide
 import { MicSession, midiToFreq, midiToNoteName, NOTE_NAMES } from '../pitch-engine.js';
 import { playGlide, playNote } from '../tone.js';
+import { runCountdown } from '../countdown.js';
 
 function tolerance(level) {
   return [100, 90, 80, 70, 60, 55, 50, 45, 40, 35][level - 1];
@@ -335,13 +336,14 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     await wait(250);
     if (signal.aborted) return null;
 
-    // นับถอยหลัง
-    for (const c of ['3', '2', '1', '🎈 บิน!']) {
-      if (signal.aborted) return null;
-      instrEl.textContent = c;
-      draw(0);
-      await wait(700);
-    }
+    // นับถอยหลังตัวใหญ่กลางจอ (utility กลาง — หายเองเมื่อจบ)
+    instrEl.textContent = 'เตรียมเสียง "อู" ให้พร้อม...';
+    await runCountdown(stage.querySelector('.pg-canvas-wrap'), {
+      signal,
+      steps: ['3', '2', '1', '🎈 บิน!'],
+      onTick: () => draw(0),
+    });
+    if (signal.aborted) return null;
     instrEl.textContent = 'ร้องตามเส้น บินลอดห่วง!';
     t0 = performance.now();
     running = true;

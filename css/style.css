@@ -1263,3 +1263,26 @@ body:not(.auth-locked) .login-view { display: none !important; }
   color: var(--accent);
 }
 .nh-seconds span { font-size: 2.2rem; }
+
+/* countdown เริ่มเกม — ตัวเลขใหญ่กลาง container (ใช้ร่วมทุกเกมผ่าน js/countdown.js) */
+.game-countdown {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(4rem, 18vh, 7rem);
+  font-weight: 700;
+  color: var(--accent);
+  text-shadow: 0 4px 20px rgba(255,255,255,0.95), 0 2px 8px rgba(255,255,255,0.9);
+  pointer-events: none;
+  z-index: 5;
+  line-height: 1;
+  text-align: center;
+}
+.game-countdown.tick { animation: cdPop 0.65s ease; }
+@keyframes cdPop {
+  from { transform: scale(1.6); opacity: 0; }
+  30% { opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
