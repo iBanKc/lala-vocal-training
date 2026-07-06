@@ -174,6 +174,20 @@ async function showScoreScreen(gameId, level, result) {
   gameRoot().querySelector('#btnRetry').addEventListener('click', () => startRound(gameId, level));
   gameRoot().querySelector('#btnHome').addEventListener('click', () => showPage('pageHub'));
 
+  // ปุ่ม "ด่านถัดไป" — แสดงทุกครั้งที่ด่านถัดไปเล่นได้ (รวมเล่นซ้ำด่านที่ผ่านแล้ว)
+  // ไม่ผูกกับ "เพิ่งปลดล็อก" อีกต่อไป; ด่านพิเศษ 101+ ไม่อยู่ในลำดับด่าน จึงไม่แสดง
+  const showNextIfPlayable = () => {
+    const nextPlayable = level < 100 && level < game.maxLevel && (
+      gameId === 'warmup_routine' || // วอร์ม: ทุก routine เปิดเสมอ
+      level + 1 <= unlockedLevel(gameId, game.maxLevel)
+    );
+    if (!nextPlayable) return;
+    const nextBtn = gameRoot().querySelector('#btnNext');
+    if (!nextBtn || !nextBtn.classList.contains('hidden')) return; // ออกจากหน้าไปแล้ว/แสดงแล้ว
+    nextBtn.classList.remove('hidden');
+    nextBtn.addEventListener('click', () => startRound(gameId, level + 1));
+  };
+
   const submitEl = gameRoot().querySelector('#scoreSubmit');
   try {
     const resp = await api('/api/sessions', {
@@ -188,15 +202,12 @@ async function showScoreScreen(gameId, level, result) {
     });
     submitEl.innerHTML = `<span class="xp-pop">+${resp.xp_earned} XP</span>` +
       (resp.streak > 1 ? ` <span class="streak-pop">🔥 ${resp.streak} วันติด</span>` : '');
-    if (resp.unlocked_next && level < game.maxLevel) {
-      const nextBtn = gameRoot().querySelector('#btnNext');
-      nextBtn.classList.remove('hidden');
-      nextBtn.addEventListener('click', () => startRound(gameId, level + 1));
-    }
-    await loadProfile(); // อัปเดต hub/XP bar
+    await loadProfile(); // อัปเดต hub/XP bar + สถานะปลดล็อกล่าสุด (รวมที่เพิ่งปลดรอบนี้)
+    showNextIfPlayable();
     if (resp.new_badges?.length) showBadgePopup(resp.new_badges);
   } catch (err) {
     submitEl.textContent = '⚠️ บันทึกผลไม่สำเร็จ: ' + (err.message || '');
+    showNextIfPlayable(); // เล่นต่อได้จาก state ล่าสุดแม้บันทึกพลาด
   }
 }
 
