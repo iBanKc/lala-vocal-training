@@ -6,10 +6,22 @@ export default async function handler(req, res) {
   const auth = await requireAuth(req, res);
   if (!auth) return;
 
-  // PATCH: บันทึกช่วงเสียงจากการ calibrate
+  // PATCH: บันทึกช่วงเสียงจากการ calibrate และ/หรือธีมส่วนตัว
   if (req.method === 'PATCH') {
-    const { voice_low_midi, voice_high_midi } = req.body || {};
-    const low = Number(voice_low_midi), high = Number(voice_high_midi);
+    const body = req.body || {};
+
+    // ธีม: '' = มาตรฐาน
+    if ('theme' in body) {
+      const theme = String(body.theme ?? '');
+      if (!['', 'boy', 'girl'].includes(theme)) {
+        return res.status(400).json({ error: 'ธีมไม่ถูกต้อง' });
+      }
+      await sql`UPDATE users SET theme = ${theme} WHERE id = ${auth.userId}`;
+      if (!('voice_low_midi' in body)) return res.json({ ok: true, theme });
+    }
+
+    if (!('voice_low_midi' in body)) return res.status(400).json({ error: 'ไม่มีข้อมูลให้บันทึก' });
+    const low = Number(body.voice_low_midi), high = Number(body.voice_high_midi);
     // ช่วงเสียงมนุษย์ที่สมเหตุสมผล: C2 (36) ถึง C7 (96) และกว้างอย่างน้อย 5 semitones
     if (!Number.isInteger(low) || !Number.isInteger(high) || low < 36 || high > 96 || high - low < 5) {
       return res.status(400).json({ error: 'ช่วงเสียงไม่ถูกต้อง' });
@@ -22,7 +34,7 @@ export default async function handler(req, res) {
 
   const rows = await sql`
     SELECT id, username, display_name, role, is_guest, xp, streak_days, last_practice_date,
-           voice_low_midi, voice_high_midi
+           voice_low_midi, voice_high_midi, theme
     FROM users WHERE id = ${auth.userId} AND is_active
   `;
   const user = rows[0];

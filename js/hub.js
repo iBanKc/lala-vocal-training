@@ -19,13 +19,26 @@ function render() {
     ? `${midiToNoteName(u.voice_low_midi)} – ${midiToNoteName(u.voice_high_midi)}`
     : 'ยังไม่ได้วัด';
 
+  const theme = u.theme || '';
+  const mascot = theme === 'boy' ? 'assets/themes/boy.jpg'
+    : theme === 'girl' ? 'assets/themes/girl.jpg' : '';
+
   hubEl().innerHTML = `
-    <section class="hub-profile">
+    <section class="hub-profile ${mascot ? 'has-mascot' : ''}">
+      ${mascot ? `<img class="hub-mascot" src="${mascot}" alt="" />` : ''}
       <div class="hub-account-row">
         <div class="hub-greeting">สวัสดี, <strong>${u.display_name}</strong> 👋</div>
         <div class="hub-account-btns">
           ${u.role === 'teacher' ? '<a href="/teacher.html" class="logout-btn">👩‍🏫 ห้องครู</a>' : ''}
           <button class="logout-btn" id="hubLogout" title="ออกจากระบบ">ออก</button>
+        </div>
+      </div>
+      <div class="hub-theme-row">
+        <span class="hub-theme-label">🎨 ธีม</span>
+        <div class="theme-chips">
+          <button class="theme-chip ${theme === '' ? 'active' : ''}" data-theme="">มาตรฐาน</button>
+          <button class="theme-chip ${theme === 'boy' ? 'active' : ''}" data-theme="boy">👦 เด็กชาย</button>
+          <button class="theme-chip ${theme === 'girl' ? 'active' : ''}" data-theme="girl">👧 เด็กหญิง</button>
         </div>
       </div>
       <div class="hub-level-row">
@@ -79,6 +92,8 @@ function render() {
     render();
   });
   hubEl().querySelector('#hubLogout').addEventListener('click', logout);
+  hubEl().querySelectorAll('.theme-chip').forEach(chip =>
+    chip.addEventListener('click', () => setTheme(chip.dataset.theme)));
   const credBtn = hubEl().querySelector('#hubGuestCred');
   if (credBtn) {
     credBtn.addEventListener('click', async () => {
@@ -94,6 +109,29 @@ function render() {
     });
   }
 }
+
+// ── ธีมส่วนตัว: apply ทั้งแอป + จำในเครื่อง + บันทึกกับบัญชี ──
+function applyTheme(theme) {
+  if (theme) document.documentElement.setAttribute('data-theme', theme);
+  else document.documentElement.removeAttribute('data-theme');
+}
+
+async function setTheme(theme) {
+  applyTheme(theme);                          // เปลี่ยนหน้าตาทันที
+  localStorage.setItem('ls_theme', theme);    // cache กัน FOUC ครั้งหน้า
+  if (state.user) state.user.theme = theme;
+  render();                                   // อัปเดตชิป active + มาสคอต
+  try {
+    await api('/api/me', { method: 'PATCH', body: { theme } });
+  } catch { /* บันทึกไม่ได้ก็ยังใช้ค่าในเครื่องไปก่อน */ }
+}
+
+// ค่าจากบัญชีชนะ cache เมื่อโหลดโปรไฟล์ (ย้ายเครื่อง/ใช้แท็บเล็ตร่วมกัน)
+window.addEventListener('profile:updated', () => {
+  const t = state.user?.theme || '';
+  applyTheme(t);
+  localStorage.setItem('ls_theme', t);
+});
 
 window.addEventListener('profile:updated', render);
 window.addEventListener('auth:ready', () => { render(); showPage('pageHub'); });

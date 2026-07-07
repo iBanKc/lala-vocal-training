@@ -16,10 +16,34 @@
   --radius-sm: 8px;
   --shadow: 0 2px 12px rgba(33,150,243,0.10);
   --nav-h: 56px;
+  --grad-a: #1565C0;   /* gradient การ์ดโน้ต/hero — เปลี่ยนตามธีม */
+  --grad-b: #2196F3;
   /* Fluid spacing — scales between small and large phones */
   --gap: clamp(6px, 1.8vh, 16px);
   --pad: clamp(10px, 2vh, 20px);
   --pad-sm: clamp(6px, 1.2vh, 12px);
+}
+
+/* ── ธีมส่วนตัว (เลือกจาก hub, ผูกกับบัญชี) ─────────── */
+:root[data-theme="boy"] {
+  --bg: #edf1fa;
+  --bg3: #e3e9f8;
+  --accent: #1e40af;
+  --accent2: #ea580c;
+  --border: rgba(30,64,175,0.20);
+  --shadow: 0 2px 12px rgba(30,64,175,0.12);
+  --grad-a: #172d6e;
+  --grad-b: #2563eb;
+}
+:root[data-theme="girl"] {
+  --bg: #fdf2f8;
+  --bg3: #fce7f3;
+  --accent: #be185d;
+  --accent2: #db2777;
+  --border: rgba(219,39,119,0.22);
+  --shadow: 0 2px 12px rgba(219,39,119,0.10);
+  --grad-a: #db2777;
+  --grad-b: #f472b6;
 }
 
 html, body {
@@ -121,7 +145,7 @@ section {
 /* ── Pitch Section ─────────────────────────────── */
 .pitch-section {
   text-align: center;
-  background: linear-gradient(135deg, #1565C0, #2196F3);
+  background: linear-gradient(135deg, var(--grad-a), var(--grad-b));
   border-color: transparent;
   display: flex;
   flex-direction: column;
@@ -599,8 +623,47 @@ body:not(.auth-locked) .login-view { display: none !important; }
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding: var(--pad);
+  position: relative;
+  overflow: hidden;
 }
+.hub-mascot {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  width: clamp(72px, 22vw, 110px);
+  height: auto;
+  opacity: 0.9;
+  pointer-events: none;
+  border-radius: var(--radius);
+}
+.hub-profile.has-mascot .hub-account-row,
+.hub-profile.has-mascot .hub-level-row,
+.hub-profile.has-mascot .xp-text,
+.hub-profile.has-mascot .hub-theme-row { padding-right: clamp(60px, 20vw, 96px); }
 .hub-greeting { font-size: 1.05rem; }
+.hub-theme-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.hub-theme-label { font-size: clamp(0.8rem, 1.5vh, 0.9rem); color: var(--text2); font-weight: 600; }
+.theme-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.theme-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-family: inherit;
+  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-chip.active { background: var(--accent2); border-color: var(--accent); color: #fff; }
 .hub-level-row {
   display: flex;
   justify-content: space-between;
