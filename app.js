@@ -8,6 +8,7 @@ import {
 } from './js/pitch-engine.js';
 import { playNote } from './js/tone.js';
 import { PianoRoll } from './js/piano-roll.js';
+import { watchFit } from './js/fit-guard.js';
 
 const TOL = 25; // cents — โซนเป้าหมาย (เท่าเกมเสียงนิ่งด่าน 1)
 
@@ -51,6 +52,9 @@ const roll = new PianoRoll(document.getElementById('fpRoll'), {
 roll.setTarget(targetMidi, TOL);
 
 window.addEventListener('resize', () => { roll.resize(); roll.draw(); });
+
+// Safety net: หน้านี้ต้องพอดีจอเดียวเสมอ — ถ้าเกิน (เช่น system font ใหญ่) ย่อทั้งหน้า
+const pitchGuard = watchFit(document.getElementById('pagePitch'), () => { roll.resize(); roll.draw(); });
 
 // ── Bottom navigation ──────────────────────────────────
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -255,6 +259,7 @@ function stopListening() {
 // ── ผลลัพธ์: ลากเสียงต่อเนื่องยาวสุด เป็นวินาที + จังหวะ (60 BPM) ──
 function showResult() {
   document.getElementById('scoreSection').classList.remove('hidden');
+  pitchGuard.refit(); // การ์ดผลเพิ่มความสูง — เช็ค fit ใหม่
 
   if (best >= 500) {
     const sec = best / 1000;

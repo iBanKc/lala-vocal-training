@@ -436,24 +436,18 @@ button {
     --pad-sm: 6px;
   }
   .header { padding: 6px 0 2px; }
-  .logo   { font-size: clamp(1.1rem, 4vw, 1.5rem); }
   .tagline { display: none; }
   .brand-logo { width: 42px; height: 42px; }
 
-  /* จอเตี้ย: ตัดของตกแต่ง/ซ้ำซ้อนเพื่อให้พอดีจอเดียว */
+  /* จอเตี้ย: ตัดของตกแต่ง/ซ้ำซ้อน — การย่อฟอนต์เป็นหน้าที่ของ fluid root แล้ว
+     (ห้ามใส่ font-size ซ้ำในนี้ เดี๋ยวย่อสองชั้น) */
   .footer { display: none; }
   .note-octave { display: none; }        /* ซ้ำกับชื่อโน้ตใหญ่ */
-  .perm-banner { padding: 5px 10px; font-size: 0.8rem; }
-  .cent-display { font-size: 0.85rem; }
+  .perm-banner { padding: 5px 10px; }
 
-  /* Compact note buttons */
-  .note-btn { padding: 7px 2px; font-size: 0.8rem; }
-
-  /* Compact controls */
-  .controls-section button { padding: 8px 10px; font-size: 0.88rem; }
-
-  /* Compact pitch header */
-  .current-note { font-size: clamp(1.8rem, 5vh, 2.5rem); }
+  /* Compact paddings (px ไม่ย่อตาม root เอง) */
+  .note-btn { padding: 7px 2px; }
+  .controls-section button { padding: 8px 10px; }
 }
 
 /* ── จอเตี้ยพิเศษ (iPhone SE + แถบ Safari) ───────── */
@@ -1202,8 +1196,14 @@ body:not(.auth-locked) .login-view { display: none !important; }
   to { transform: scale(1); opacity: 1; }
 }
 
-/* รอบ 14: ฐานตัวอักษรใหญ่ขึ้นทั้งแอป (+6%) — px padding เดิม สัดส่วนการ์ดคงที่ */
-html { font-size: 17px; }
+/* Dynamic UI: root font ไหลตามความสูงจอ — จอสูง ≥806px ได้ 17px เท่ารอบ 14,
+   จอเตี้ยกว่าค่อย ๆ ย่อถึง 13.5px (~580px) → ทุกอย่างที่เป็น rem ปรับต่อเนื่องทุกรุ่น
+   text-size-adjust กัน iOS Safari ขยายตัวอักษรเอง (ตัวการ layout เพี้ยนบางรุ่น) */
+html {
+  font-size: clamp(13.5px, 1.55vh + 4.5px, 17px);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
 /* ข้อความแจ้งใหญ่กลางจอ ค้าง 2 วิ (เช่น เกมเฉพาะนักเรียนโรงเรียน) */
 .flash-notice {

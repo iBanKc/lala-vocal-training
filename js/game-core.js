@@ -4,6 +4,7 @@ import { state, loadProfile, bestStars, unlockedLevel } from './state.js';
 import { ensureCalibrated } from './calibrate.js';
 import { BADGE_INFO } from './badges.js';
 import { BOOK, BOOK_EXERCISES, WARMUP_ROUTINES } from './curriculum.js';
+import { watchFit } from './fit-guard.js';
 
 export const GAMES = {
   note_match:   { title: 'จับคู่โน้ต',   icon: '🎯', desc: 'ฟังโน้ตแล้วร้องตามให้ตรง', maxLevel: 10, available: true,  load: () => import('./games/note-match.js') },
@@ -18,6 +19,7 @@ const pageGame = () => document.getElementById('pageGame');
 const gameRoot = () => document.getElementById('gameRoot');
 
 let activeAbort = null; // ยกเลิกเกมที่ค้างอยู่เมื่อออกกลางคัน
+let stageGuard = null;  // fit-guard เฉพาะสนามเกมระหว่างเล่น (หน้าเลือกด่าน scroll ได้ตามเดิม)
 
 export function showPage(pageId) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -146,6 +148,8 @@ export async function startRound(gameId, level) {
   });
 
   const stage = gameRoot().querySelector('#gameStage');
+  stageGuard?.stop();
+  stageGuard = watchFit(stage);
   const startedAt = performance.now();
 
   let result = null;
@@ -178,6 +182,8 @@ export async function startRound(gameId, level) {
 function clientStars(score) { return score >= 90 ? 3 : score >= 75 ? 2 : score >= 50 ? 1 : 0; }
 
 async function showScoreScreen(gameId, level, result) {
+  stageGuard?.stop();
+  stageGuard = null;
   const game = GAMES[gameId];
   const score = Math.round(result.score);
   const stars = clientStars(score);
