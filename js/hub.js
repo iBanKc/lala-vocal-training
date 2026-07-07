@@ -20,12 +20,12 @@ function render() {
     : 'ยังไม่ได้วัด';
 
   const theme = u.theme || '';
-  const mascot = theme === 'boy' ? 'assets/themes/boy.jpg'
-    : theme === 'girl' ? 'assets/themes/girl.jpg' : '';
+  // absolute path — url() ใน --mascot ถูก consume ใน style.css จึงต้องอิง root ไม่ใช่ /css/
+  const mascot = theme === 'boy' ? '/assets/themes/boy.jpg'
+    : theme === 'girl' ? '/assets/themes/girl.jpg' : '';
 
   hubEl().innerHTML = `
-    <section class="hub-profile ${mascot ? 'has-mascot' : ''}">
-      ${mascot ? `<img class="hub-mascot" src="${mascot}" alt="" />` : ''}
+    <section class="hub-profile ${mascot ? 'has-mascot' : ''}"${mascot ? ` style="--mascot:url('${mascot}')"` : ''}>
       <div class="hub-account-row">
         <div class="hub-greeting">สวัสดี, <strong>${u.display_name}</strong> 👋</div>
         <div class="hub-account-btns">
@@ -34,12 +34,12 @@ function render() {
         </div>
       </div>
       <div class="hub-theme-row">
-        <span class="hub-theme-label">🎨 ธีม</span>
-        <div class="theme-chips">
-          <button class="theme-chip ${theme === '' ? 'active' : ''}" data-theme="">มาตรฐาน</button>
-          <button class="theme-chip ${theme === 'boy' ? 'active' : ''}" data-theme="boy">👦 เด็กชาย</button>
-          <button class="theme-chip ${theme === 'girl' ? 'active' : ''}" data-theme="girl">👧 เด็กหญิง</button>
-        </div>
+        <label class="hub-theme-label" for="themeSelect">🎨 ธีม</label>
+        <select id="themeSelect" class="theme-select">
+          <option value=""${theme === '' ? ' selected' : ''}>มาตรฐาน</option>
+          <option value="boy"${theme === 'boy' ? ' selected' : ''}>👦 เด็กชาย</option>
+          <option value="girl"${theme === 'girl' ? ' selected' : ''}>👧 เด็กหญิง</option>
+        </select>
       </div>
       <div class="hub-level-row">
         <span class="hub-level">ระดับ ${u.level} · ${levelTitle(u.level)}</span>
@@ -92,8 +92,7 @@ function render() {
     render();
   });
   hubEl().querySelector('#hubLogout').addEventListener('click', logout);
-  hubEl().querySelectorAll('.theme-chip').forEach(chip =>
-    chip.addEventListener('click', () => setTheme(chip.dataset.theme)));
+  hubEl().querySelector('#themeSelect').addEventListener('change', e => setTheme(e.target.value));
   const credBtn = hubEl().querySelector('#hubGuestCred');
   if (credBtn) {
     credBtn.addEventListener('click', async () => {

@@ -626,44 +626,39 @@ body:not(.auth-locked) .login-view { display: none !important; }
   position: relative;
   overflow: hidden;
 }
-.hub-mascot {
+/* มาสคอตเป็นพื้นหลังจาง ๆ ของทั้งการ์ด — เนื้อหาลอยอยู่เหนือ อ่านง่าย */
+.hub-profile.has-mascot::before {
+  content: '';
   position: absolute;
-  right: -8px;
-  bottom: -8px;
-  width: clamp(72px, 22vw, 110px);
-  height: auto;
-  opacity: 0.9;
+  inset: 0;
+  background: var(--mascot) right center / cover no-repeat;
+  opacity: 0.22;
   pointer-events: none;
-  border-radius: var(--radius);
+  z-index: 0;
 }
-.hub-profile.has-mascot .hub-account-row,
-.hub-profile.has-mascot .hub-level-row,
-.hub-profile.has-mascot .xp-text,
-.hub-profile.has-mascot .hub-theme-row { padding-right: clamp(60px, 20vw, 96px); }
+.hub-profile > * { position: relative; z-index: 1; }
 .hub-greeting { font-size: 1.05rem; }
 .hub-theme-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 10px;
-  flex-wrap: wrap;
 }
-.hub-theme-label { font-size: clamp(0.8rem, 1.5vh, 0.9rem); color: var(--text2); font-weight: 600; }
-.theme-chips { display: flex; gap: 6px; flex-wrap: wrap; }
-.theme-chip {
-  padding: 5px 10px;
-  border-radius: 999px;
+.hub-theme-label { font-size: clamp(0.8rem, 1.5vh, 0.9rem); color: var(--text2); font-weight: 600; white-space: nowrap; }
+.theme-select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
   background: var(--bg3);
   border: 1px solid var(--border);
-  color: var(--text2);
+  color: var(--text);
   font-family: inherit;
-  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
+  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.theme-chip.active { background: var(--accent2); border-color: var(--accent); color: #fff; }
 .hub-level-row {
   display: flex;
   justify-content: space-between;
