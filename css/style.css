@@ -322,11 +322,64 @@ button {
 
 /* ── Footer ────────────────────────────────────── */
 .footer {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   color: var(--text2);
   font-size: clamp(0.75rem, 1.3vh, 0.85rem);
   padding: 4px 0 2px;
   flex-shrink: 0;
+}
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── เกี่ยวกับเรา (ช่องทางติดต่อโรงเรียน) ─────────── */
+.about-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(13, 27, 46, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+.about-card {
+  background: var(--bg2);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  padding: clamp(18px, 3vh, 28px);
+  width: 100%;
+  max-width: 340px;
+  text-align: center;
+}
+.about-card h3 { font-size: 1.15rem; color: var(--text); }
+.about-card .about-tagline { font-size: 0.85rem; color: var(--text2); margin: 4px 0 14px; }
+.about-links { display: flex; flex-direction: column; gap: 10px; }
+.about-links a {
+  display: block;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.about-links a:hover { border-color: var(--accent2); background: #dbeafe; }
+.about-empty { font-size: 0.9rem; color: var(--text2); }
+.about-close {
+  margin-top: 14px;
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
 }
 
 /* ── Bottom Navigation ─────────────────────────── */
@@ -441,7 +494,7 @@ button {
 
   /* จอเตี้ย: ตัดของตกแต่ง/ซ้ำซ้อน — การย่อฟอนต์เป็นหน้าที่ของ fluid root แล้ว
      (ห้ามใส่ font-size ซ้ำในนี้ เดี๋ยวย่อสองชั้น) */
-  .footer { display: none; }
+  .footer { padding: 2px 0 1px; }        /* slim แต่ยังเห็นลิงก์เกี่ยวกับเรา */
   .note-octave { display: none; }        /* ซ้ำกับชื่อโน้ตใหญ่ */
   .perm-banner { padding: 5px 10px; }
 

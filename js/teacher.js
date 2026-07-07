@@ -267,4 +267,36 @@ $('#createStudent').addEventListener('click', async () => {
   }
 });
 
+// ── ช่องทางติดต่อ (แสดงใน "เกี่ยวกับเรา" ของแอป) ──────
+async function loadContact() {
+  try {
+    const s = await api('/api/settings');
+    $('#contactLine').value = s.contact_line || '';
+    $('#contactFacebook').value = s.contact_facebook || '';
+    $('#contactMaps').value = s.contact_maps || '';
+  } catch { /* ยังไม่มีค่า/โหลดพลาด — ช่องว่างไว้ */ }
+}
+
+$('#saveContact').addEventListener('click', async () => {
+  const msg = $('#contactMsg');
+  msg.textContent = '';
+  try {
+    await api('/api/settings', {
+      method: 'PATCH',
+      body: {
+        contact_line: $('#contactLine').value.trim(),
+        contact_facebook: $('#contactFacebook').value.trim(),
+        contact_maps: $('#contactMaps').value.trim(),
+      },
+    });
+    msg.style.color = '#16a34a';
+    msg.textContent = '✅ บันทึกแล้ว — แสดงใน "เกี่ยวกับเรา" ทันที';
+  } catch (err) {
+    msg.style.color = '';
+    msg.textContent = '⚠️ ' + err.message;
+  }
+});
+
+loadContact();
+
 init();

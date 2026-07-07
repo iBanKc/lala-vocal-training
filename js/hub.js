@@ -97,3 +97,42 @@ function render() {
 
 window.addEventListener('profile:updated', render);
 window.addEventListener('auth:ready', () => { render(); showPage('pageHub'); });
+
+// ── เกี่ยวกับเรา: ช่องทางติดต่อโรงเรียน (ลิงก์ตั้งค่าจากหน้า admin) ──
+let contactCache = null;
+
+async function openAbout() {
+  if (!contactCache) {
+    try {
+      contactCache = await fetch('/api/settings').then(r => r.json());
+    } catch {
+      contactCache = {};
+    }
+  }
+  const channels = [
+    { key: 'contact_line', icon: '💬', label: 'LINE' },
+    { key: 'contact_facebook', icon: '📘', label: 'Facebook' },
+    { key: 'contact_maps', icon: '📍', label: 'แผนที่โรงเรียน' },
+  ].filter(c => contactCache[c.key]);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'about-overlay';
+  overlay.innerHTML = `
+    <div class="about-card">
+      <h3>🎵 Blues Dot Music</h3>
+      <p class="about-tagline">สนใจเรียนร้องเพลง? ติดต่อเราได้เลย</p>
+      ${channels.length
+        ? `<div class="about-links">${channels.map(c =>
+            `<a href="${contactCache[c.key]}" target="_blank" rel="noopener">${c.icon} ${c.label}</a>`).join('')}</div>`
+        : '<p class="about-empty">ติดต่อได้ที่โรงเรียน Blues Dot Music</p>'}
+      <button class="about-close" id="aboutClose">ปิด</button>
+    </div>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  overlay.querySelector('#aboutClose').addEventListener('click', () => overlay.remove());
+  document.body.appendChild(overlay);
+}
+
+document.getElementById('aboutLink')?.addEventListener('click', e => {
+  e.preventDefault();
+  openAbout();
+});
