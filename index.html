@@ -122,16 +122,28 @@
         <div class="fp-roll-wrap"><canvas id="fpRoll"></canvas></div>
         <div class="fp-meta">
           <div class="fp-held">อยู่ในโซน <span id="fpHeld">0.0</span> วิ</div>
+          <div class="nh-wobble">
+            <span>ความนิ่ง</span>
+            <div class="nh-wobble-track"><div class="nh-wobble-bar" id="fpWobble"></div></div>
+          </div>
           <div class="cent-display" id="centDisplay">0 cents</div>
-        </div>
-        <div class="nh-wobble">
-          <span>ความนิ่ง</span>
-          <div class="nh-wobble-track"><div class="nh-wobble-bar" id="fpWobble"></div></div>
         </div>
       </section>
 
       <section class="target-section">
-        <div class="target-label">โน้ตเป้าหมาย</div>
+        <div class="target-head">
+          <div class="target-label">โน้ตเป้าหมาย</div>
+          <div class="octave-select-wrap">
+            <label>ออคเทฟ:</label>
+            <select id="octaveSelect">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+        </div>
         <div class="note-buttons" id="noteButtons">
           <button class="note-btn active" data-note="C">C</button>
           <button class="note-btn" data-note="C#">C#</button>
@@ -145,16 +157,6 @@
           <button class="note-btn" data-note="A">A</button>
           <button class="note-btn" data-note="A#">A#</button>
           <button class="note-btn" data-note="B">B</button>
-        </div>
-        <div class="octave-select-wrap">
-          <label>ออคเทฟ:</label>
-          <select id="octaveSelect">
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-          </select>
         </div>
       </section>
 

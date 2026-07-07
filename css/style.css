@@ -101,10 +101,10 @@ body {
   border: 1px solid #fca5a5;
   border-radius: var(--radius-sm);
   color: #991b1b;
-  font-size: clamp(0.82rem, 1.5vh, 0.9rem);
-  padding: 8px 14px;
+  font-size: clamp(0.8rem, 1.4vh, 0.88rem);
+  padding: 6px 12px;
   text-align: center;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 /* ── Card ──────────────────────────────────────── */
@@ -150,8 +150,8 @@ section {
 
 /* ── จอวัด PianoRoll (แบบเกมเสียงนิ่ง) ─────────── */
 .roll-section {
-  flex: 1 0 auto;   /* โตเต็มที่ว่าง แต่ไม่ถูกบีบต่ำกว่า min-height (หน้าจะ scroll แทน) */
-  min-height: 170px;
+  flex: 1 1 0;      /* ตัวยืดหยุ่นเดียวของหน้า: ดูดซับพื้นที่เหลือ/ขาดทั้งหมด */
+  min-height: 84px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -159,7 +159,7 @@ section {
 }
 .fp-roll-wrap {
   flex: 1;
-  min-height: 0;
+  min-height: 48px;   /* จอ pitch ต้องไม่เล็กจนอ่านไม่ได้ ไม่ว่า section จะถูกบีบแค่ไหน */
 }
 #fpRoll {
   width: 100%;
@@ -167,35 +167,50 @@ section {
   display: block;
   border-radius: var(--radius-sm);
 }
+/* แถวเดียวใต้จอ: เวลาในโซน | แถบความนิ่ง | cents */
 .fp-meta {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: 10px;
   flex-shrink: 0;
 }
 .fp-held {
   font-size: clamp(0.8rem, 1.5vh, 0.9rem);
   color: var(--text2);
+  white-space: nowrap;
 }
 .fp-held span { font-weight: 700; color: var(--accent); font-size: 1.1em; }
-.roll-section .nh-wobble { max-width: none; flex-shrink: 0; }
+.roll-section .nh-wobble {
+  max-width: none;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.roll-section .nh-wobble-track { flex: 1; margin-top: 0; }
 .cent-display {
   text-align: right;
   font-size: clamp(0.85rem, 1.8vh, 1.1rem);
   font-weight: 600;
   color: var(--green);
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 /* ── Target Notes ──────────────────────────────── */
 .target-section {
   flex: 0 0 auto;
 }
+.target-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(4px, 0.8vh, 8px);
+}
 .target-label {
   font-size: clamp(0.78rem, 1.4vh, 0.85rem);
   color: var(--text2);
-  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -290,7 +305,7 @@ button {
   margin-bottom: 4px;
 }
 .score-value {
-  font-size: clamp(1.8rem, 6vh, 3rem);
+  font-size: clamp(1.5rem, 4.5vh, 2.6rem);
   font-weight: 700;
   color: var(--accent);
 }
@@ -420,17 +435,20 @@ button {
   .tagline { display: none; }
   .brand-logo { width: 42px; height: 42px; }
 
-  /* Compact roll + cents */
-  .roll-section { min-height: 120px; }
+  /* จอเตี้ย: ตัดของตกแต่ง/ซ้ำซ้อนเพื่อให้พอดีจอเดียว */
+  .footer { display: none; }
+  .note-octave { display: none; }        /* ซ้ำกับชื่อโน้ตใหญ่ */
+  .perm-banner { padding: 5px 10px; font-size: 0.8rem; }
+  .score-value { font-size: clamp(1.3rem, 4vh, 2rem); }
   .cent-display { font-size: 0.85rem; }
 
   /* Compact note buttons */
   .note-btn { padding: 7px 2px; font-size: 0.8rem; }
-  .target-label { display: none; }
-  .octave-select-wrap { margin-top: 4px; }
 
-  /* Compact controls */
-  .controls-section button { padding: 10px 12px; font-size: 0.88rem; }
+  /* Compact controls + score */
+  .controls-section button { padding: 8px 10px; font-size: 0.88rem; }
+  .score-section { padding: var(--pad-sm); }
+  .score-title { margin-bottom: 2px; }
 
   /* Compact pitch header */
   .current-note { font-size: clamp(1.8rem, 5vh, 2.5rem); }
@@ -524,8 +542,9 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 
 /* ══════════ Hub ══════════ */
-#pageHub, #pageGame, #pagePitch { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-#pagePitch > section { flex-shrink: 0; }
+#pageHub, #pageGame { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* ฝึกอิสระ: ทุกอย่างพอดีจอเดียว — roll-section เป็นตัวเดียวที่ยืด/หด */
+#pagePitch { gap: clamp(5px, 1.2vh, 12px); }
 
 .hub-profile {
   background: var(--bg2);
