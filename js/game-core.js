@@ -60,6 +60,9 @@ export async function openGame(gameId) {
     return;
   }
 
+  // วอร์มมีเสียงบรรยาย — โหมดเงียบของ iOS จะ mute เสียงทั้งหมด เตือนก่อนเข้า
+  if (gameId === 'warmup_routine') flashNotice('🔔 ปิดโหมดเงียบ<br>เพื่อฟังเสียงบรรยาย');
+
   if (!game.noCalibration && !(await ensureCalibrated())) return; // ต้องรู้ช่วงเสียงก่อน
 
   // เกมด่านเดียว (เช่น ร้องเพลงเต็ม): เข้าเล่นทันที ไม่ผ่านหน้าเลือกด่าน
