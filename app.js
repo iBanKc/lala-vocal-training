@@ -264,8 +264,8 @@ function showResult() {
     else if (sec >= 8) label = '👍 ดีมาก ฝึกต่อไปนะ';
     else if (sec >= 4) label = '💪 พอใช้ได้ ลองอีกครั้ง';
     else               label = '🎵 ฝึกต่อไปเรื่อยๆ นะ';
-    scoreValueEl.textContent = sec.toFixed(1) + ' วิ';
-    scoreSubEl.textContent = `= ${beats} จังหวะ ที่ 60 BPM · ${label}`;
+    scoreValueEl.textContent = `${sec.toFixed(1)} วิ · ${beats} จังหวะ`;
+    scoreSubEl.textContent = `เทียบกับ 60 BPM · ${label}`;
     return;
   }
 

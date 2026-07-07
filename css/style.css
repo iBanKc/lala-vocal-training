@@ -145,7 +145,7 @@ section {
 .freq-display {
   font-size: clamp(0.82rem, 1.6vh, 0.9rem);
   color: rgba(255,255,255,0.7);
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 /* ── จอวัด PianoRoll (แบบเกมเสียงนิ่ง) ─────────── */
@@ -295,6 +295,7 @@ button {
 .score-section {
   text-align: center;
   flex: 0 0 auto;
+  padding: var(--pad-sm);
 }
 .score-title {
   font-size: clamp(0.78rem, 1.4vh, 0.85rem);
@@ -302,17 +303,21 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 .score-value {
-  font-size: clamp(1.5rem, 4.5vh, 2.6rem);
+  font-size: clamp(1.2rem, 6vw, 2.2rem); /* ผูก vw: "26.7 วิ · 26 จังหวะ" ต้องพอดีบรรทัดเดียวเสมอ */
   font-weight: 700;
   color: var(--accent);
+  white-space: nowrap;
 }
 .score-sub {
   font-size: clamp(0.8rem, 1.6vh, 0.9rem);
   color: var(--text2);
   margin-top: 2px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 /* ── Footer ────────────────────────────────────── */
@@ -439,19 +444,23 @@ button {
   .footer { display: none; }
   .note-octave { display: none; }        /* ซ้ำกับชื่อโน้ตใหญ่ */
   .perm-banner { padding: 5px 10px; font-size: 0.8rem; }
-  .score-value { font-size: clamp(1.3rem, 4vh, 2rem); }
   .cent-display { font-size: 0.85rem; }
 
   /* Compact note buttons */
   .note-btn { padding: 7px 2px; font-size: 0.8rem; }
 
-  /* Compact controls + score */
+  /* Compact controls */
   .controls-section button { padding: 8px 10px; font-size: 0.88rem; }
-  .score-section { padding: var(--pad-sm); }
-  .score-title { margin-bottom: 2px; }
 
   /* Compact pitch header */
   .current-note { font-size: clamp(1.8rem, 5vh, 2.5rem); }
+}
+
+/* ── จอเตี้ยพิเศษ (iPhone SE + แถบ Safari) ───────── */
+@media (max-height: 620px) {
+  .pitch-section { padding: var(--pad-sm); }
+  .note-btn { padding: 5px 2px; }
+  .fp-roll-wrap { min-height: 40px; }
 }
 
 /* ── Animations ────────────────────────────────── */
