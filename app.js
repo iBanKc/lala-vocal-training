@@ -1,9 +1,10 @@
-// ฝึกอิสระ (Pitch Trainer) — วัดแบบเดียวกับเกมเสียงนิ่ง:
-// PianoRoll โซนเป้าหมาย ±TOL, นับเวลาที่อยู่ในโซน, แถบความนิ่งจาก rolling stddev,
-// คะแนน = 70×สัดส่วนเวลาในโซน + โบนัสความนิ่ง (30 − stddev)
+// ฝึกอิสระ (Pitch Trainer) — ฝึกลากเสียงบนโน้ตเป้าหมาย:
+// PianoRoll โซนเป้าหมาย ±TOL + แถบความนิ่ง; ผลลัพธ์ไม่ใช่คะแนน —
+// รายงาน "ลากเสียงต่อเนื่องยาวสุด" เป็นวินาที + จังหวะ (60 BPM: 1 จังหวะ = 1 วิ)
+// ตรรกะ streak เดียวกับการวัด S-s-s Breath ในวอร์ม (ยอมหลุดสั้น <400ms)
 import {
   noteToFreq, freqToNoteInfo, centsBetween,
-  MicSession, SegmentTracker,
+  MicSession,
 } from './js/pitch-engine.js';
 import { playNote } from './js/tone.js';
 import { PianoRoll } from './js/piano-roll.js';
@@ -19,13 +20,13 @@ let targetOctave = 4;
 let targetFreq = noteToFreq('C', 4);
 let targetMidi = 60;
 
-// ตัวสะสมการวัด (ตรรกะเดียวกับเกมเสียงนิ่ง)
-let heldMs = 0;         // เวลาที่เสียงอยู่ในโซน ±TOL
-let voicedMs = 0;       // เวลาที่ได้ยินเสียงร้องทั้งหมด
+// ตัวสะสมการวัด: streak ลากเสียงต่อเนื่องบนโน้ตเป้าหมาย (แบบวัด S-s-s)
+let cur = 0;            // ms — ช่วงลากเสียงปัจจุบัน
+let best = 0;           // ms — ช่วงลากเสียงยาวสุดของรอบนี้
+let lastInZone = null;  // เวลาเฟรมล่าสุดที่อยู่ในโซน (ใช้ยอมหลุดสั้น <400ms)
+let voicedMs = 0;       // เวลาที่ได้ยินเสียงร้องทั้งหมด (แยกเคส "ร้องแต่ไม่เกาะโน้ต")
 let lastTime = null;
 let recentMidis = [];
-let segments = [];
-let segTracker = null;
 
 // ── DOM ────────────────────────────────────────────────
 const currentNoteEl = document.getElementById('currentNote');
@@ -90,12 +91,12 @@ function setTarget() {
 }
 
 function resetMeasure() {
-  heldMs = 0;
+  cur = 0;
+  best = 0;
+  lastInZone = null;
   voicedMs = 0;
   lastTime = null;
   recentMidis = [];
-  segments = [];
-  if (isListening) segTracker = new SegmentTracker({ onSegment: seg => segments.push(seg) });
   fpHeldEl.textContent = '0.0';
   wobbleEl.style.width = '0%';
   centDisplayEl.textContent = '0 cents';
@@ -145,7 +146,7 @@ startBtn.addEventListener('click', async () => {
   freqDisplayEl.textContent = 'กำลังขอสิทธิ์ไมค์...';
   startBtn.disabled = true;
 
-  isListening = true; // ให้ resetMeasure สร้าง segTracker
+  isListening = true;
   resetMeasure();
   scoreValueEl.textContent = '—';
   scoreSubEl.textContent = '';
@@ -187,14 +188,24 @@ startBtn.addEventListener('click', async () => {
   }
 });
 
-// ── Frame handler (ตรรกะวัดเดียวกับเกมเสียงนิ่ง) ───────
+// ── Frame handler ──────────────────────────────────────
 function handleFrame(frame) {
-  segTracker.push(frame);
   roll.pushPitch(frame.voiced ? frame.midi : null);
   roll.draw();
 
   const dt = lastTime === null ? 0 : frame.time - lastTime;
   lastTime = frame.time;
+
+  // streak แบบวัด S-s-s: อยู่ในโซน = นับต่อ, หลุดเกิน 400ms = เริ่มลมใหม่
+  const inZone = frame.voiced && Math.abs(centsBetween(frame.freq, targetFreq)) <= TOL;
+  if (inZone) {
+    cur += dt;
+    lastInZone = frame.time;
+    best = Math.max(best, cur);
+  } else if (lastInZone !== null && frame.time - lastInZone > 400) {
+    cur = 0;
+  }
+  fpHeldEl.textContent = (cur / 1000).toFixed(1);
 
   if (!frame.voiced) {
     currentNoteEl.textContent = '—';
@@ -211,11 +222,8 @@ function handleFrame(frame) {
   voicedMs += dt;
   const centsFromTarget = centsBetween(frame.freq, targetFreq);
   const absC = Math.abs(centsFromTarget);
-  if (absC <= TOL) heldMs += dt;
-
   centDisplayEl.textContent = `${centsFromTarget > 0 ? '+' : ''}${Math.round(centsFromTarget)} cents`;
   centDisplayEl.style.color = absC <= TOL ? '#16a34a' : absC < 50 ? '#ca8a04' : '#dc2626';
-  fpHeldEl.textContent = (heldMs / 1000).toFixed(1);
 
   // แถบความนิ่ง: rolling stddev 20 เฟรมล่าสุด
   recentMidis.push(frame.midi);
@@ -235,44 +243,36 @@ stopBtn.addEventListener('click', stopListening);
 function stopListening() {
   isListening = false;
   if (mic) { mic.stop(); mic = null; }
-  if (segTracker) segTracker.end(); // ปิด segment สุดท้ายที่ค้างอยู่
 
   startBtn.classList.remove('hidden');
   stopBtn.classList.add('hidden');
   appEl.classList.remove('listening');
   freqDisplayEl.textContent = 'กด "เริ่ม" เพื่อเปิดไมค์';
 
-  showScore();
+  showResult();
 }
 
-// ── คะแนน (สูตรเกมเสียงนิ่ง ปรับเป็นแบบไม่มีเวลาเป้าหมาย) ──
-// 70 × สัดส่วนเวลาที่อยู่ในโซน ±TOL + โบนัสความนิ่ง max(0, 30 − stddev)
-function showScore() {
+// ── ผลลัพธ์: ลากเสียงต่อเนื่องยาวสุด เป็นวินาที + จังหวะ (60 BPM) ──
+function showResult() {
   document.getElementById('scoreSection').classList.remove('hidden');
 
-  const scored = segments
-    .map(seg => seg.stats(targetMidi))
-    .filter(Boolean);
-
-  if (voicedMs < 1000 || !scored.length) {
-    scoreValueEl.textContent = '—';
-    scoreSubEl.textContent = 'ยังไม่ได้ยินเสียงร้องที่ชัดพอ ลองอีกครั้งนะ';
+  if (best >= 500) {
+    const sec = best / 1000;
+    const beats = Math.floor(sec); // 60 BPM: 1 จังหวะ = 1 วินาที
+    let label = '';
+    if (sec >= 12)     label = '🌟 ยอดเยี่ยมมาก!';
+    else if (sec >= 8) label = '👍 ดีมาก ฝึกต่อไปนะ';
+    else if (sec >= 4) label = '💪 พอใช้ได้ ลองอีกครั้ง';
+    else               label = '🎵 ฝึกต่อไปเรื่อยๆ นะ';
+    scoreValueEl.textContent = sec.toFixed(1) + ' วิ';
+    scoreSubEl.textContent = `= ${beats} จังหวะ ที่ 60 BPM · ${label}`;
     return;
   }
 
-  const totalDur = scored.reduce((a, s) => a + s.durMs, 0);
-  const stddev = scored.reduce((a, s) => a + s.stddevCents * s.durMs, 0) / totalDur;
-  const avgCents = scored.reduce((a, s) => a + s.meanAbsCents * s.durMs, 0) / totalDur;
-  const inZone = Math.min(1, heldMs / voicedMs);
-  const score = Math.round(Math.max(0, Math.min(100, 70 * inZone + Math.max(0, 30 - stddev))));
-
-  scoreValueEl.textContent = score + '%';
-  let label = '';
-  if (score >= 90)      label = '🌟 ยอดเยี่ยมมาก!';
-  else if (score >= 75) label = '👍 ดีมาก ฝึกต่อไปนะ';
-  else if (score >= 50) label = '💪 พอใช้ได้ ลองอีกครั้ง';
-  else                  label = '🎵 ฝึกต่อไปเรื่อยๆ นะ';
-  scoreSubEl.textContent = `${label} อยู่ในโซน ${Math.round(inZone * 100)}% · เพี้ยนเฉลี่ย ${avgCents.toFixed(0)} cents`;
+  scoreValueEl.textContent = '—';
+  scoreSubEl.textContent = voicedMs > 1000
+    ? 'ยังไม่เกาะโน้ตเป้าหมาย — กด 🔊 ฟังโน้ตแล้วลองใหม่นะ'
+    : 'ยังไม่ได้ยินเสียงร้องที่ชัดพอ ลองอีกครั้งนะ';
 }
 
 // ── Play target note ───────────────────────────────────
