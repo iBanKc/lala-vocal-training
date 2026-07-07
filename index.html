@@ -118,22 +118,16 @@
         <div class="freq-display" id="freqDisplay">กด "เริ่ม" เพื่อเปิดไมค์</div>
       </section>
 
-      <section class="meter-section">
-        <div class="meter-label">ความแม่นยำ</div>
-        <div class="meter-bar-wrap">
-          <div class="meter-bar" id="meterBar"></div>
-          <div class="meter-center"></div>
+      <section class="roll-section">
+        <div class="fp-roll-wrap"><canvas id="fpRoll"></canvas></div>
+        <div class="fp-meta">
+          <div class="fp-held">อยู่ในโซน <span id="fpHeld">0.0</span> วิ</div>
+          <div class="cent-display" id="centDisplay">0 cents</div>
         </div>
-        <div class="meter-hints">
-          <span>ต่ำเกิน</span>
-          <span>ตรงโน้ต</span>
-          <span>สูงเกิน</span>
+        <div class="nh-wobble">
+          <span>ความนิ่ง</span>
+          <div class="nh-wobble-track"><div class="nh-wobble-bar" id="fpWobble"></div></div>
         </div>
-        <div class="cent-display" id="centDisplay">0 cents</div>
-      </section>
-
-      <section class="canvas-section">
-        <canvas id="pitchCanvas"></canvas>
       </section>
 
       <section class="target-section">

@@ -126,11 +126,10 @@ section {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  flex: 3;          /* takes most vertical space */
-  min-height: 80px;
+  flex: 0 0 auto;   /* สูงตามเนื้อหา — ตัวโน้ตไม่ล้นการ์ด */
 }
 .current-note {
-  font-size: clamp(2.8rem, 10vh, 5.5rem);
+  font-size: clamp(2.2rem, 6vh, 3.5rem);
   font-weight: 700;
   line-height: 1;
   color: #fff;
@@ -149,73 +148,44 @@ section {
   margin-top: 6px;
 }
 
-/* ── Meter ─────────────────────────────────────── */
-.meter-section {
-  flex: 0 0 auto;
-}
-.meter-label {
-  font-size: clamp(0.78rem, 1.4vh, 0.85rem);
-  color: var(--text2);
-  text-align: center;
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-}
-.meter-bar-wrap {
-  position: relative;
-  height: clamp(16px, 2.5vh, 24px);
-  background: var(--bg3);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.meter-bar {
-  position: absolute;
-  top: 0; bottom: 0;
-  width: 6px;
-  border-radius: 3px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--green);
-  transition: left 0.08s ease-out, background 0.2s;
-}
-.meter-center {
-  position: absolute;
-  top: 3px; bottom: 3px;
-  width: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(33,150,243,0.35);
-  border-radius: 1px;
-}
-.meter-hints {
+/* ── จอวัด PianoRoll (แบบเกมเสียงนิ่ง) ─────────── */
+.roll-section {
+  flex: 1 0 auto;   /* โตเต็มที่ว่าง แต่ไม่ถูกบีบต่ำกว่า min-height (หน้าจะ scroll แทน) */
+  min-height: 170px;
   display: flex;
-  justify-content: space-between;
-  font-size: clamp(0.75rem, 1.4vh, 0.85rem);
-  color: var(--text2);
-  margin-top: 5px;
-}
-.cent-display {
-  text-align: center;
-  font-size: clamp(0.85rem, 1.8vh, 1.1rem);
-  font-weight: 600;
-  margin-top: 6px;
-  color: var(--green);
-  transition: color 0.2s;
-}
-
-/* ── Canvas ────────────────────────────────────── */
-.canvas-section {
-  flex: 1;
-  min-height: 50px;
+  flex-direction: column;
+  gap: 6px;
   padding: var(--pad-sm);
 }
-#pitchCanvas {
+.fp-roll-wrap {
+  flex: 1;
+  min-height: 0;
+}
+#fpRoll {
   width: 100%;
   height: 100%;
   display: block;
   border-radius: var(--radius-sm);
+}
+.fp-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.fp-held {
+  font-size: clamp(0.8rem, 1.5vh, 0.9rem);
+  color: var(--text2);
+}
+.fp-held span { font-weight: 700; color: var(--accent); font-size: 1.1em; }
+.roll-section .nh-wobble { max-width: none; flex-shrink: 0; }
+.cent-display {
+  text-align: right;
+  font-size: clamp(0.85rem, 1.8vh, 1.1rem);
+  font-weight: 600;
+  color: var(--green);
+  transition: color 0.2s;
 }
 
 /* ── Target Notes ──────────────────────────────── */
@@ -438,20 +408,6 @@ button {
 .mismatch-cents.high { color: var(--red); }
 .no-mismatch { text-align: center; color: var(--green); font-weight: 600; padding: 12px 0; font-size: clamp(0.85rem, 1.7vh, 1rem); }
 
-/* ── Compare canvas ────────────────────────────── */
-.canvas-section { background: var(--bg2); }
-#cmpCanvas { height: 80px; }
-
-/* ── Live pitch in compare ─────────────────────── */
-#cmpLivePitch {
-  flex-shrink: 0;
-  text-align: center;
-  background: linear-gradient(135deg, #1565C0, #2196F3);
-  border-color: transparent;
-  padding: var(--pad-sm);
-}
-#cmpLivePitch .current-note { font-size: clamp(2rem, 7vh, 3.5rem); }
-
 /* ── Small screen (iPhone SE, older Android) ───── */
 @media (max-height: 700px) {
   :root {
@@ -464,25 +420,20 @@ button {
   .tagline { display: none; }
   .brand-logo { width: 42px; height: 42px; }
 
-  /* Hide canvas on very small screens to free up space */
-  .canvas-section { display: none; }
-
-  /* Compact meter — hide label, reduce height */
-  .meter-label { display: none; }
-  .meter-bar-wrap { height: 14px; }
-  .cent-display { margin-top: 4px; font-size: 0.85rem; }
+  /* Compact roll + cents */
+  .roll-section { min-height: 120px; }
+  .cent-display { font-size: 0.85rem; }
 
   /* Compact note buttons */
-  .note-btn { padding: 7px 2px; font-size: 0.78rem; }
+  .note-btn { padding: 7px 2px; font-size: 0.8rem; }
   .target-label { display: none; }
   .octave-select-wrap { margin-top: 4px; }
 
   /* Compact controls */
   .controls-section button { padding: 10px 12px; font-size: 0.88rem; }
 
-  /* Pitch section stays tall */
-  .pitch-section { min-height: 70px; }
-  .current-note  { font-size: clamp(2.5rem, 9vh, 4rem); }
+  /* Compact pitch header */
+  .current-note { font-size: clamp(1.8rem, 5vh, 2.5rem); }
 }
 
 /* ── Animations ────────────────────────────────── */
@@ -573,7 +524,8 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 
 /* ══════════ Hub ══════════ */
-#pageHub, #pageGame { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#pageHub, #pageGame, #pagePitch { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#pagePitch > section { flex-shrink: 0; }
 
 .hub-profile {
   background: var(--bg2);
