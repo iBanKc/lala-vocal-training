@@ -132,7 +132,4 @@ async function openAbout() {
   document.body.appendChild(overlay);
 }
 
-document.getElementById('aboutLink')?.addEventListener('click', e => {
-  e.preventDefault();
-  openAbout();
-});
+document.getElementById('aboutNavBtn')?.addEventListener('click', openAbout);

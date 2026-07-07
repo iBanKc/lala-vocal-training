@@ -322,20 +322,11 @@ button {
 
 /* ── Footer ────────────────────────────────────── */
 .footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  text-align: center;
   color: var(--text2);
   font-size: clamp(0.75rem, 1.3vh, 0.85rem);
   padding: 4px 0 2px;
   flex-shrink: 0;
-}
-.footer a {
-  color: var(--accent);
-  text-decoration: none;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* ── เกี่ยวกับเรา (ช่องทางติดต่อโรงเรียน) ─────────── */
@@ -494,7 +485,7 @@ button {
 
   /* จอเตี้ย: ตัดของตกแต่ง/ซ้ำซ้อน — การย่อฟอนต์เป็นหน้าที่ของ fluid root แล้ว
      (ห้ามใส่ font-size ซ้ำในนี้ เดี๋ยวย่อสองชั้น) */
-  .footer { padding: 2px 0 1px; }        /* slim แต่ยังเห็นลิงก์เกี่ยวกับเรา */
+  .footer { display: none; }             /* ลิงก์เกี่ยวกับเราอยู่ที่ nav แล้ว */
   .note-octave { display: none; }        /* ซ้ำกับชื่อโน้ตใหญ่ */
   .perm-banner { padding: 5px 10px; }
 

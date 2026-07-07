@@ -32,8 +32,8 @@ export function abortActiveGame() {
   if (activeAbort) { activeAbort.abort(); activeAbort = null; }
 }
 
-// ออกจากหน้าเกมเมื่อกด nav ไปหน้าอื่น
-document.querySelectorAll('.nav-btn').forEach(btn =>
+// ออกจากหน้าเกมเมื่อกด nav ไปหน้าอื่น (เฉพาะปุ่มที่สลับหน้า — "เกี่ยวกับเรา" ไม่ยุ่งกับเกม)
+document.querySelectorAll('.nav-btn[data-page]').forEach(btn =>
   btn.addEventListener('click', abortActiveGame));
 
 // ข้อความใหญ่กลางจอ ค้าง 2 วิแล้วหายไป (ใช้แจ้งสิทธิ์/เตือนสั้น ๆ)

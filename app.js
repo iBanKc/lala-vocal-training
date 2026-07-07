@@ -60,6 +60,7 @@ const pitchGuard = watchFit(document.getElementById('pagePitch'), () => { roll.r
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.page;
+    if (!target) return; // ปุ่ม nav ที่ไม่ใช่หน้า (เช่น เกี่ยวกับเรา) เปิด modal เอง
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
