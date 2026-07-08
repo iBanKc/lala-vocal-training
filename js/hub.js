@@ -149,7 +149,7 @@ async function openAbout() {
   const channels = [
     { key: 'contact_line', icon: '💬', label: 'LINE' },
     { key: 'contact_facebook', icon: '📘', label: 'Facebook' },
-    { key: 'contact_maps', icon: '📍', label: 'แผนที่โรงเรียน' },
+    { key: 'contact_maps', icon: '📍', label: 'Our Location' },
   ].filter(c => contactCache[c.key]);
 
   const overlay = document.createElement('div');
