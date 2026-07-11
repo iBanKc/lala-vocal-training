@@ -85,7 +85,7 @@ export default async function handler(req, res) {
 
   // ── PATCH: รีเซ็ตรหัสผ่าน / เปิด-ปิดใช้งาน ─────────────
   if (req.method === 'PATCH') {
-    const { id, action, password, active } = req.body || {};
+    const { id, action, password, active, is_guest } = req.body || {};
     const sid = Number(id);
     if (!Number.isInteger(sid)) return res.status(400).json({ error: 'id ไม่ถูกต้อง' });
 
@@ -103,6 +103,12 @@ export default async function handler(req, res) {
     if (action === 'set_active') {
       await sql`UPDATE users SET is_active = ${Boolean(active)} WHERE id = ${sid}`;
       return res.json({ ok: true });
+    }
+    // อัปเกรดผู้เยี่ยมชมเป็นนักเรียนโรงเรียน (is_guest=false) หรือลดระดับกลับ (true)
+    // — ใช้ชื่อผู้ใช้/รหัสเดิม คะแนน/เหรียญติดตัว; sessions.js อ่าน is_guest สดจาก DB จึงมีผลทันที
+    if (action === 'set_guest') {
+      await sql`UPDATE users SET is_guest = ${Boolean(is_guest)} WHERE id = ${sid}`;
+      return res.json({ ok: true, is_guest: Boolean(is_guest) });
     }
     return res.status(400).json({ error: 'action ไม่ถูกต้อง' });
   }

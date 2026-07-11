@@ -210,6 +210,9 @@ function renderManage() {
       <td>${s.is_active ? '✅ ใช้งานได้' : '⛔ ปิดอยู่'}</td>
       <td class="manage-actions">
         ${s.is_guest ? '' : `<button class="btn-secondary btn-sm" data-act="reset" data-id="${s.id}" data-name="${s.display_name}">รีเซ็ตรหัส</button>`}
+        ${s.is_guest
+          ? `<button class="btn-secondary btn-sm" data-act="setguest" data-guest="false" data-id="${s.id}" data-name="${s.display_name}">⬆ เป็นนักเรียน</button>`
+          : `<button class="btn-secondary btn-sm" data-act="setguest" data-guest="true" data-id="${s.id}" data-name="${s.display_name}">⬇ เป็นผู้เยี่ยมชม</button>`}
         <button class="btn-secondary btn-sm" data-act="toggle" data-id="${s.id}" data-active="${s.is_active}">${s.is_active ? 'ปิดใช้งาน' : 'เปิดใช้งาน'}</button>
       </td>
     </tr>`).join('') || '<tr><td colspan="4">ยังไม่มีนักเรียน</td></tr>';
@@ -223,6 +226,13 @@ function renderManage() {
           if (!confirm(`รีเซ็ตรหัสผ่านของ ${btn.dataset.name} เป็น "${pw}" ?`)) return;
           await api('/api/admin/students', { method: 'PATCH', body: { id, action: 'reset_password', password: pw } });
           alert(`รหัสใหม่ของ ${btn.dataset.name}: ${pw}\n(จดไว้แล้วส่งให้นักเรียน)`);
+        } else if (btn.dataset.act === 'setguest') {
+          const toGuest = btn.dataset.guest === 'true';
+          const msg = toGuest
+            ? `ลด "${btn.dataset.name}" เป็นผู้เยี่ยมชม?\nจะล็อกสิทธิ์เฉพาะนักเรียน (เช่น วอร์มพื้นฐาน) — คะแนนสะสมไม่หาย`
+            : `อัปเกรด "${btn.dataset.name}" เป็นนักเรียนโรงเรียน?\nจะปลดล็อกวอร์มพื้นฐานและสิทธิ์นักเรียนทันที (ใช้ชื่อผู้ใช้/รหัสเดิม)`;
+          if (!confirm(msg)) return;
+          await api('/api/admin/students', { method: 'PATCH', body: { id, action: 'set_guest', is_guest: toGuest } });
         } else {
           const nowActive = btn.dataset.active === 'true';
           await api('/api/admin/students', { method: 'PATCH', body: { id, action: 'set_active', active: !nowActive } });
