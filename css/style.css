@@ -929,6 +929,14 @@ body:not(.auth-locked) .login-view { display: none !important; }
 
 /* ══════════ melody-echo ══════════ */
 .me-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 4px; }
+/* ป้าย "ได้ยิน: C4" สดระหว่างช่วงร้อง — feedback ทันทีสำหรับเสียงตัดสั้น */
+.me-live {
+  font-size: clamp(0.82rem, 1.6vh, 0.92rem);
+  font-weight: 700;
+  min-height: 1.3em;
+  transition: color 0.1s;
+}
+
 .me-dot {
   width: 26px; height: 26px; border-radius: 50%;
   background: var(--bg3); border: 2px solid var(--border);
