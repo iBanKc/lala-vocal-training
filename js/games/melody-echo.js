@@ -9,6 +9,7 @@ import {
 } from '../pitch-engine.js';
 import { playMelody } from '../tone.js';
 import { PianoRoll } from '../piano-roll.js';
+import { runCountdown } from '../countdown.js';
 
 function config(level) {
   const i = level - 1;
@@ -100,6 +101,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       </div>
       <div class="nm-roll-wrap"><canvas id="meRoll" class="nm-roll"></canvas></div>
       <div class="me-actions">
+        <button class="btn-secondary" id="meGuide" disabled>🔊 ฟังโน้ตนี้</button>
         <button class="btn-secondary" id="meReplay" disabled>🔁 ขอฟังทำนองอีกครั้ง (−5 คะแนน)</button>
       </div>
       <div class="nm-status" id="meStatus"></div>
@@ -120,6 +122,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
   const instrEl = stage.querySelector('#meInstruction');
   const statusEl = stage.querySelector('#meStatus');
   const replayBtn = stage.querySelector('#meReplay');
+  const guideBtn = stage.querySelector('#meGuide');
   const liveEl = stage.querySelector('#meLive');
   // ซูมช่วงโน้ตของทำนอง (เลนหนา เห็นความเพี้ยนชัด); staccato ใช้หน้าต่างเวลาสั้น
   // ให้เสียงร้องสั้น ๆ กินความกว้างจอมากขึ้น — เห็นทันทีที่เปล่งเสียง
@@ -197,6 +200,11 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     if (!replayBtn.disabled) replayRequested = true;
   });
 
+  let guideRequested = false;
+  guideBtn.addEventListener('click', () => {
+    if (!guideBtn.disabled) guideRequested = true;
+  });
+
   // ทวนโน้ตแรกหนึ่งครั้งก่อนถึงตาผู้เล่น — ให้ยึดเสียงตั้งต้นได้ (feedback เจ้าของ)
   async function anchorFirstNote() {
     instrEl.textContent = '🔔 ฟังโน้ตแรกอีกครั้ง...';
@@ -209,6 +217,14 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
     await wait(350);
   }
 
+  // นับถอยหลังตัวใหญ่กลางจอ (utility เดียวกับเสียงพาบิน) ก่อนเริ่มร้อง
+  async function singCountdown() {
+    await runCountdown(stage.querySelector('.nm-roll-wrap'), {
+      signal,
+      steps: ['3', '2', '1', '🎤 ร้อง!'],
+    });
+  }
+
   const results = [];
   try {
     while (mic.running && !mic.calibrated) {
@@ -218,12 +234,13 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
 
     await playAll();
 
-    // คั่นจังหวะ "ตาคุณแล้ว!" ให้เห็นชัดก่อนเริ่มร้อง + ทวนโน้ตแรกให้ยึดเสียง
+    // คั่นจังหวะ "ตาคุณแล้ว!" ให้เห็นชัดก่อนเริ่มร้อง + ทวนโน้ตแรกให้ยึดเสียง + นับถอยหลัง
     setPhase('sing');
     statusEl.innerHTML = '<span class="fb-good">ตาคุณแล้ว! 🎤</span>';
     await wait(900);
     statusEl.textContent = '';
     await anchorFirstNote();
+    await singCountdown();
     if (signal.aborted) return null;
     replayBtn.disabled = false;
 
@@ -237,6 +254,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
         await playAll();
         setPhase('sing');
         await anchorFirstNote();
+        await singCountdown();
         if (signal.aborted) return null;
         replayBtn.disabled = false;
       }
@@ -258,13 +276,42 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
       currentTarget = target;
       liveEl.textContent = '';
       listening = true;
+      guideRequested = false;
+      guideBtn.disabled = false;
 
       // ตัดสินเมื่อได้ segment นิ่งพอ หรือหมดเวลา — เงียบเกิน 2.5 วิ มีกระตุ้น
-      const t0 = performance.now();
+      let t0 = performance.now();
       let judged = null;
       let nudged = false;
       while (performance.now() - t0 < cfg.windowMs) {
         if (signal.aborted) return null;
+
+        // ขอฟังไกด์โน้ตนี้ (กดได้ทุกพยางค์ ไม่หักคะแนน): หยุดจับเสียง → เล่นไกด์ →
+        // ทิ้งเสียงที่รั่วเข้าไมค์ → ยืด deadline เท่าเวลาที่ใช้ → ฟังต่อ
+        if (guideRequested) {
+          guideRequested = false;
+          guideBtn.disabled = true;
+          listening = false;
+          const g0 = performance.now();
+          instrEl.textContent = '👂 ฟังไกด์...';
+          await playMelody([target], { noteDur: Math.max(cfg.noteDur, 0.6), gap: 0.1 });
+          await wait(200);
+          if (signal.aborted) return null;
+          lastSeg = null;
+          seg = new SegmentTracker({
+            minDurMs: cfg.staccato ? 140 : 250,
+            onSegment: s => { lastSeg = s; },
+          });
+          t0 += performance.now() - g0;
+          const syl2 = melodyNotes[n].syllable;
+          instrEl.textContent = syl2
+            ? `🎤 ร้อง "${syl2}" (${unitWord}ที่ ${n + 1}/${melody.length})`
+            : `🎤 ร้อง${unitWord}ที่ ${n + 1}/${melody.length} — นึกเสียงในใจแล้วร้องออกมา`;
+          listening = true;
+          guideBtn.disabled = false;
+          continue;
+        }
+
         await wait(60);
         const live = seg.liveStats(target);
         if (live && live.durMs >= cfg.judgeDurMs && live.stddevCents < 60) { judged = live; break; }
@@ -276,6 +323,7 @@ export async function run({ level, stage, signal, voiceLow, voiceHigh, exercise 
         }
       }
       listening = false;
+      guideBtn.disabled = true;
       currentTarget = null;
       liveEl.textContent = '';
       if (nudged) statusEl.textContent = '';
