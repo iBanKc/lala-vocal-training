@@ -1,55 +1,13 @@
 // วอร์มพื้นฐาน Blues Dot Music — ท่ากายภาพแบบไกด์ + จับเวลา
 // step ปกติ: การ์ดวิธีทำ + นาฬิกานับถอยหลัง; step 'hiss' (S-s-s Breath): ใช้ไมค์จับเวลาลมจริง
-// เสียงบรรยายท่า (ElevenLabs สร้างล่วงหน้า): เล่นเมื่อกดเริ่ม + "ครบกำหนดเวลา" เมื่อจบ
+// เสียงบรรยายท่า (ผ่าน js/narrator.js): เล่นเมื่อกดเริ่ม + "ครบกำหนดเวลา" เมื่อจบ
 import { MicSession } from '../pitch-engine.js';
 import { BOOK } from '../curriculum.js';
+import { prefetchVoice, playVoice, stopVoice } from '../narrator.js';
 
-// ── เสียงบรรยาย: assets/voice/warmup/w{ชุด}-{ท่า}.mp3 + timeup.mp3 ──
+// เสียงบรรยาย: assets/voice/warmup/w{ชุด}-{ท่า}.mp3 + timeup.mp3
 const VOICE_BASE = 'assets/voice/warmup/';
-const fileCache = new Map(); // url → Promise<ArrayBuffer|null>
-const bufCache = new Map();  // url → AudioBuffer
-let voCtx = null;
-let voSource = null;
-
-function prefetchVoice(name) {
-  const url = VOICE_BASE + name + '.mp3';
-  if (!fileCache.has(url)) {
-    fileCache.set(url, fetch(url)
-      .then(r => (r.ok ? r.arrayBuffer() : null))
-      .catch(() => null));
-  }
-  return fileCache.get(url);
-}
-
-function stopVoice() {
-  if (voSource) { try { voSource.stop(); } catch (_) { /* จบไปแล้ว */ } voSource = null; }
-}
-
-// สร้าง/resume AudioContext ได้เฉพาะใน user gesture (กฎ iOS) — จึงเรียกครั้งแรกจากปุ่มเริ่มเสมอ
-// คืนความยาวเสียง (วินาที); โหลดไม่ได้คืน 0 และเล่นต่อแบบเงียบ
-async function playVoice(name) {
-  try {
-    if (!voCtx) voCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (voCtx.state === 'suspended') await voCtx.resume();
-    const url = VOICE_BASE + name + '.mp3';
-    let buf = bufCache.get(url);
-    if (!buf) {
-      const data = await prefetchVoice(name);
-      if (!data) return 0;
-      buf = await voCtx.decodeAudioData(data.slice(0));
-      bufCache.set(url, buf);
-    }
-    stopVoice();
-    const src = voCtx.createBufferSource();
-    src.buffer = buf;
-    src.connect(voCtx.destination);
-    src.start();
-    voSource = src;
-    return buf.duration;
-  } catch (_) {
-    return 0; // เสียงพัง = ฝึกต่อได้เงียบ ๆ ห้ามล้มทั้งท่า
-  }
-}
+const voiceUrl = name => VOICE_BASE + name + '.mp3';
 
 export async function run({ stage, signal, routine }) {
   if (!routine) throw new Error('ไม่พบ routine');
@@ -57,8 +15,8 @@ export async function run({ stage, signal, routine }) {
   const results = []; // ต่อ step: 1 = ทำครบ, 0..1 สำหรับ hiss
 
   // โหลดเสียงของทั้ง routine ล่วงหน้าแบบ background
-  routine.steps.forEach((_, i) => prefetchVoice(`w${routine.level}-${i + 1}`));
-  prefetchVoice('timeup');
+  routine.steps.forEach((_, i) => prefetchVoice(voiceUrl(`w${routine.level}-${i + 1}`)));
+  prefetchVoice(voiceUrl('timeup'));
   signal.addEventListener('abort', stopVoice, { once: true });
 
   for (let i = 0; i < routine.steps.length; i++) {
@@ -100,7 +58,7 @@ export async function run({ stage, signal, routine }) {
         if (step.measured === 'hiss') {
           // เล่นเสียงบรรยายให้จบก่อนเปิดไมค์ — กันเสียงจากลำโพงรั่วเข้าช่วงวัดเสียงรอบข้าง
           statusEl.textContent = '👂 ฟังคำแนะนำ...';
-          const narrSec = await playVoice(voiceName);
+          const narrSec = await playVoice(voiceUrl(voiceName));
           if (narrSec > 0) await wait(Math.min(narrSec * 1000 + 300, 40000));
           if (signal.aborted) return;
           statusEl.textContent = '';
@@ -147,7 +105,7 @@ export async function run({ stage, signal, routine }) {
             if ((best > 1000 && lastLoud && now - lastLoud > 2000) || now - t0 > 45000) {
               clearInterval(poll);
               stopAll();
-              playVoice('timeup'); // ctx เปิดจาก gesture แล้ว — เล่นนอก gesture ได้
+              playVoice(voiceUrl('timeup')); // ctx เปิดจาก gesture แล้ว — เล่นนอก gesture ได้
               const ratio = Math.min(1, best / (step.targetSec * 1000));
               statusEl.innerHTML = ratio >= 1
                 ? `<span class="fb-good">✓ ${(best / 1000).toFixed(1)} วิ — ปอดแข็งแรงมาก!</span>`
@@ -157,7 +115,7 @@ export async function run({ stage, signal, routine }) {
           }, 150);
         } else {
           // จับเวลาปกติ — เสียงบรรยายเล่นคู่ไปกับตัวจับเวลา
-          playVoice(voiceName);
+          playVoice(voiceUrl(voiceName));
           const total = step.seconds * 1000;
           const t0 = performance.now();
           const tick = setInterval(() => {
@@ -168,7 +126,7 @@ export async function run({ stage, signal, routine }) {
             if (el >= total) {
               clearInterval(tick);
               signal.removeEventListener('abort', onAbort);
-              playVoice('timeup'); // แจ้งครบเวลา — เปลี่ยนท่าต่อไปได้
+              playVoice(voiceUrl('timeup')); // แจ้งครบเวลา — เปลี่ยนท่าต่อไปได้
               statusEl.innerHTML = '<span class="fb-good">✓ เสร็จท่านี้!</span>';
               setTimeout(() => resolve(1), 1600);
             }

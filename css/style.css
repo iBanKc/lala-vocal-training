@@ -518,6 +518,19 @@ button {
   .controls-section button { padding: 8px 10px; }
 }
 
+/* ── แถบเสียงอ่านคำอธิบายแบบฝึก ─────────────────── */
+.narrate-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: clamp(20px, 5vh, 48px) 0;
+  font-size: clamp(0.9rem, 1.8vh, 1rem);
+  font-weight: 600;
+  color: var(--text2);
+}
+
 /* ── จอเตี้ยพิเศษ (iPhone SE + แถบ Safari) ───────── */
 @media (max-height: 620px) {
   .pitch-section { padding: var(--pad-sm); }

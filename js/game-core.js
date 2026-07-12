@@ -5,6 +5,7 @@ import { ensureCalibrated } from './calibrate.js';
 import { BADGE_INFO } from './badges.js';
 import { BOOK, BOOK_EXERCISES, WARMUP_ROUTINES } from './curriculum.js';
 import { watchFit } from './fit-guard.js';
+import { prefetchVoice, playVoice, stopVoice } from './narrator.js';
 
 export const GAMES = {
   note_match:   { title: 'จับคู่โน้ต',   icon: '🎯', desc: 'ฟังโน้ตแล้วร้องตามให้ตรง', maxLevel: 10, available: true,  load: () => import('./games/note-match.js') },
@@ -75,6 +76,8 @@ export async function openGame(gameId) {
   showPage('pageGame');
   const maxPlayable = unlockedLevel(gameId, game.maxLevel);
   const bookList = BOOK_EXERCISES[gameId] || [];
+  // โหลดเสียงอ่านคำอธิบายแบบฝึกของเกมนี้ล่วงหน้าแบบ background
+  bookList.forEach(ex => prefetchVoice(`assets/voice/book/${ex.id}.mp3`));
 
   // วอร์มพื้นฐาน: ทุก routine ปลดล็อก แสดงชื่อแทนตัวเลข
   const levelButtons = gameId === 'warmup_routine'
@@ -122,6 +125,25 @@ export async function openGame(gameId) {
     btn.addEventListener('click', () => startRound(gameId, Number(btn.dataset.level))));
 }
 
+// ── เสียงอ่านคำอธิบายแบบฝึก (การ์ด 💡 ด้านบนแสดงข้อความเดียวกันอยู่แล้ว) ──
+async function narrateExercise(stage, exercise, signal) {
+  const durSec = await playVoice(`assets/voice/book/${exercise.id}.mp3`);
+  if (durSec <= 0 || signal.aborted) return; // ไฟล์หาย/โหลดพลาด → เริ่มเกมทันที
+  stage.innerHTML = `
+    <div class="narrate-bar">
+      <span>🔊 ฟังคำอธิบายแบบฝึก...</span>
+      <button class="btn-secondary" id="skipNarration">ข้ามคำอธิบาย ▶</button>
+    </div>`;
+  await new Promise(resolve => {
+    const t = setTimeout(resolve, durSec * 1000 + 300);
+    const done = () => { clearTimeout(t); resolve(); };
+    stage.querySelector('#skipNarration').addEventListener('click', done, { once: true });
+    signal.addEventListener('abort', done, { once: true });
+  });
+  stopVoice();
+  stage.innerHTML = '';
+}
+
 // ── เล่นหนึ่งรอบ ───────────────────────────────────────
 export async function startRound(gameId, level) {
   const game = GAMES[gameId];
@@ -153,6 +175,14 @@ export async function startRound(gameId, level) {
   const stage = gameRoot().querySelector('#gameStage');
   stageGuard?.stop();
   stageGuard = watchFit(stage);
+
+  // แบบฝึกจากคลัง: อ่านคำอธิบายให้ฟังจบก่อนเริ่มเกม (กันเสียงรั่วเข้าช่วง calibrate ไมค์)
+  // — การกดการ์ดแบบฝึกคือ user gesture ที่ใช้เปิด AudioContext (กฎ iOS)
+  if (exercise) {
+    await narrateExercise(stage, exercise, abort.signal);
+    if (abort.signal.aborted) return;
+  }
+
   const startedAt = performance.now();
 
   let result = null;
