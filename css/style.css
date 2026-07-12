@@ -1001,6 +1001,39 @@ body:not(.auth-locked) .login-view { display: none !important; }
 }
 .manage-card h3 { font-size: 0.95rem; margin-bottom: 10px; }
 .manage-form { display: flex; flex-direction: column; gap: 8px; max-width: 380px; }
+
+/* ── การ์ด credentials (หลังสร้างบัญชี/รีเซ็ตรหัส) ── */
+.cred-card {
+  margin-top: 10px;
+  background: #f0fdf4;
+  border: 1px solid rgba(22,163,74,0.35);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cred-title { color: #15803d; font-weight: 700; font-size: 0.9rem; }
+.cred-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text2);
+}
+.cred-row span { min-width: 64px; }
+.cred-row code {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  user-select: all;
+}
+.cred-all { align-self: flex-start; }
 .pw-row { display: flex; gap: 8px; }
 .pw-row .login-input { flex: 1; }
 .btn-sm { padding: 6px 11px; font-size: 0.83rem; border-radius: var(--radius-sm); }

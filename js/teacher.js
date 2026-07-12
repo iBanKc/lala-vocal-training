@@ -209,7 +209,7 @@ function renderManage() {
       <td>@${s.username}</td>
       <td>${s.is_active ? '✅ ใช้งานได้' : '⛔ ปิดอยู่'}</td>
       <td class="manage-actions">
-        ${s.is_guest ? '' : `<button class="btn-secondary btn-sm" data-act="reset" data-id="${s.id}" data-name="${s.display_name}">รีเซ็ตรหัส</button>`}
+        ${s.is_guest ? '' : `<button class="btn-secondary btn-sm" data-act="reset" data-id="${s.id}" data-name="${s.display_name}" data-username="${s.username}">รีเซ็ตรหัส</button>`}
         ${s.is_guest
           ? `<button class="btn-secondary btn-sm" data-act="setguest" data-guest="false" data-id="${s.id}" data-name="${s.display_name}">⬆ เป็นนักเรียน</button>`
           : `<button class="btn-secondary btn-sm" data-act="setguest" data-guest="true" data-id="${s.id}" data-name="${s.display_name}">⬇ เป็นผู้เยี่ยมชม</button>`}
@@ -225,7 +225,7 @@ function renderManage() {
           const pw = genPassword();
           if (!confirm(`รีเซ็ตรหัสผ่านของ ${btn.dataset.name} เป็น "${pw}" ?`)) return;
           await api('/api/admin/students', { method: 'PATCH', body: { id, action: 'reset_password', password: pw } });
-          alert(`รหัสใหม่ของ ${btn.dataset.name}: ${pw}\n(จดไว้แล้วส่งให้นักเรียน)`);
+          showCredCard(btn.dataset.username, pw); // การ์ดคัดลอกได้ แทน alert เดิม
         } else if (btn.dataset.act === 'setguest') {
           const toGuest = btn.dataset.guest === 'true';
           const msg = toGuest
@@ -255,6 +255,48 @@ $('#guestToggle').addEventListener('change', e => {
   renderOverview();
 });
 
+// ── การ์ด credentials พร้อมปุ่มคัดลอก (ใช้ทั้งตอนสร้างบัญชีและรีเซ็ตรหัส) ──
+const APP_URL = 'https://vocal-training.bluedotrecords.com';
+
+async function copyText(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // fallback เบราว์เซอร์เก่า/ไม่มีสิทธิ์ clipboard
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+  }
+  const old = btn.textContent;
+  btn.textContent = '✅ คัดลอกแล้ว';
+  btn.disabled = true;
+  setTimeout(() => { btn.textContent = old; btn.disabled = false; }, 1500);
+}
+
+function showCredCard(username, password) {
+  const msg = $('#createMsg');
+  msg.style.color = '';
+  msg.innerHTML = `
+    <div class="cred-card">
+      <div class="cred-title">✅ บัญชีพร้อมใช้ — ส่งข้อมูลนี้ให้ผู้เล่นได้เลย</div>
+      <div class="cred-row"><span>ชื่อผู้ใช้</span><code>${username}</code>
+        <button class="btn-secondary btn-sm" data-copy="${username}">📋 คัดลอก</button></div>
+      <div class="cred-row"><span>รหัสผ่าน</span><code>${password}</code>
+        <button class="btn-secondary btn-sm" data-copy="${password}">📋 คัดลอก</button></div>
+      <button class="btn-secondary btn-sm cred-all" id="credCopyAll">📋 คัดลอกทั้งชุด (พร้อมลิงก์เข้าเกม)</button>
+    </div>`;
+  msg.querySelectorAll('[data-copy]').forEach(b =>
+    b.addEventListener('click', () => copyText(b.dataset.copy, b)));
+  msg.querySelector('#credCopyAll').addEventListener('click', e =>
+    copyText(`เข้าเล่น Let's Sing ได้ที่ ${APP_URL}\nชื่อผู้ใช้: ${username}\nรหัสผ่าน: ${password}`, e.target));
+  msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 $('#genPassword').addEventListener('click', () => { $('#newPassword').value = genPassword(); });
 
 $('#createStudent').addEventListener('click', async () => {
@@ -267,10 +309,9 @@ $('#createStudent').addEventListener('click', async () => {
       password: $('#newPassword').value,
     };
     await api('/api/admin/students', { method: 'POST', body });
-    msg.style.color = '#16a34a';
-    msg.textContent = `✅ สร้างแล้ว: ${body.username} / ${body.password} (ส่งให้นักเรียนได้เลย)`;
     $('#newUsername').value = $('#newDisplayName').value = $('#newPassword').value = '';
     await loadOverview();
+    showCredCard(body.username.toLowerCase().trim(), body.password);
   } catch (err) {
     msg.style.color = '';
     msg.textContent = '⚠️ ' + err.message;
