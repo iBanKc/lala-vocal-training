@@ -3,12 +3,13 @@
 // รายงาน "ลากเสียงต่อเนื่องยาวสุด" เป็นวินาที + จังหวะ (60 BPM: 1 จังหวะ = 1 วิ)
 // ตรรกะ streak เดียวกับการวัด S-s-s Breath ในวอร์ม (ยอมหลุดสั้น <400ms)
 import {
-  noteToFreq, freqToNoteInfo, centsBetween,
+  noteToFreq, freqToNoteInfo, foldCents, NOTE_NAMES,
   MicSession,
 } from './js/pitch-engine.js';
 import { playNote } from './js/tone.js';
 import { PianoRoll } from './js/piano-roll.js';
 import { watchFit } from './js/fit-guard.js';
+import { state } from './js/state.js';
 
 const TOL = 25; // cents — โซนเป้าหมาย (เท่าเกมเสียงนิ่งด่าน 1)
 
@@ -72,14 +73,37 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
 });
 
 // ── Note buttons ───────────────────────────────────────
+// เลือก octave ให้โน้ตอยู่ใกล้กึ่งกลางช่วงเสียงผู้ใช้ (แบบเดียวกับที่เสียงนิ่งเลือกเป้าในช่วงเสียง)
+function bestOctave(note) {
+  const u = state.user;
+  if (!u?.voice_low_midi || !u?.voice_high_midi) return targetOctave;
+  const center = (u.voice_low_midi + u.voice_high_midi) / 2;
+  const idx = NOTE_NAMES.indexOf(note);
+  let best = targetOctave, bestDist = Infinity;
+  for (let oct = 2; oct <= 6; oct++) {
+    const d = Math.abs((oct + 1) * 12 + idx - center);
+    if (d < bestDist) { bestDist = d; best = oct; }
+  }
+  return best;
+}
+
+function autoOctave() {
+  targetOctave = bestOctave(targetNote);
+  document.getElementById('octaveSelect').value = String(targetOctave);
+}
+
 document.querySelectorAll('.note-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.note-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     targetNote = btn.dataset.note;
+    autoOctave(); // ผู้เล่นยังปรับ octave เองต่อได้จาก dropdown
     setTarget();
   });
 });
+
+// เมื่อโปรไฟล์โหลด (รู้ช่วงเสียงแล้ว) ตั้ง octave เริ่มต้นให้โน้ตปัจจุบันอยู่ในช่วงเสียง
+window.addEventListener('profile:updated', () => { autoOctave(); setTarget(); });
 
 document.getElementById('octaveSelect').addEventListener('change', e => {
   targetOctave = parseInt(e.target.value);
@@ -195,14 +219,19 @@ startBtn.addEventListener('click', async () => {
 
 // ── Frame handler ──────────────────────────────────────
 function handleFrame(frame) {
-  roll.pushPitch(frame.voiced ? frame.midi : null);
+  // เทียบแบบไม่สน octave (foldCents ±600 — ตัวเดียวกับโหมดเพลง): นักร้องร้อง
+  // pitch class ตรงใน octave ของเสียงตัวเองต้องนับ (feedback เจ้าของ: เป้า C4 ร้อง C3 ถูกบอก "ต่ำไป")
+  const folded = frame.voiced ? foldCents((frame.midi - targetMidi) * 100) : null;
+  // เส้นบนกราฟ fold เข้า octave ของเป้า — ให้วิ่งเข้าเลนเป้าที่ซูมไว้เสมอ
+  const dispMidi = frame.voiced ? frame.midi + 12 * Math.round((targetMidi - frame.midi) / 12) : null;
+  roll.pushPitch(dispMidi);
   roll.draw();
 
   const dt = lastTime === null ? 0 : frame.time - lastTime;
   lastTime = frame.time;
 
   // streak แบบวัด S-s-s: อยู่ในโซน = นับต่อ, หลุดเกิน 400ms = เริ่มลมใหม่
-  const inZone = frame.voiced && Math.abs(centsBetween(frame.freq, targetFreq)) <= TOL;
+  const inZone = frame.voiced && Math.abs(folded) <= TOL;
   if (inZone) {
     cur += dt;
     lastInZone = frame.time;
@@ -225,9 +254,8 @@ function handleFrame(frame) {
   freqDisplayEl.textContent = `${frame.freq.toFixed(1)} Hz`;
 
   voicedMs += dt;
-  const centsFromTarget = centsBetween(frame.freq, targetFreq);
-  const absC = Math.abs(centsFromTarget);
-  centDisplayEl.textContent = `${centsFromTarget > 0 ? '+' : ''}${Math.round(centsFromTarget)} cents`;
+  const absC = Math.abs(folded);
+  centDisplayEl.textContent = `${folded > 0 ? '+' : ''}${Math.round(folded)} cents`;
   centDisplayEl.style.color = absC <= TOL ? '#16a34a' : absC < 50 ? '#ca8a04' : '#dc2626';
 
   // แถบความนิ่ง: rolling stddev 20 เฟรมล่าสุด
